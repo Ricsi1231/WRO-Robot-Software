@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import signal
 import threading
 import time
+from typing import Any
 
 import cv2
 import numpy as np
-from gpiozero import OutputDevice
-from picamera2 import Picamera2
 
 RED_GPIO_PIN = 17
 GREEN_GPIO_PIN = 27
@@ -21,30 +22,30 @@ RED_UPPER_2 = np.array([180, 255, 255])
 GREEN_LOWER = np.array([130, 100, 80])
 GREEN_UPPER = np.array([165, 255, 255])
 
-last_red_pulse = 0
-last_green_pulse = 0
+last_red_pulse: float = 0
+last_green_pulse: float = 0
 
 
-def pulse(device):
+def pulse(device: Any) -> None:
     device.on()
     time.sleep(PULSE_DURATION)
     device.off()
 
 
-def detect_color(hsv_frame):
+def detect_color(hsv_frame: np.ndarray) -> tuple[int, int]:
     red_mask_1 = cv2.inRange(hsv_frame, RED_LOWER_1, RED_UPPER_1)
     red_mask_2 = cv2.inRange(hsv_frame, RED_LOWER_2, RED_UPPER_2)
-    red_mask = red_mask_1 | red_mask_2
+    red_mask = cv2.bitwise_or(red_mask_1, red_mask_2)
 
     green_mask = cv2.inRange(hsv_frame, GREEN_LOWER, GREEN_UPPER)
 
-    red_pixels = cv2.countNonZero(red_mask)
-    green_pixels = cv2.countNonZero(green_mask)
+    red_pixels: int = cv2.countNonZero(red_mask)
+    green_pixels: int = cv2.countNonZero(green_mask)
 
     return red_pixels, green_pixels
 
 
-def process_frame(request):
+def process_frame(request: Any) -> None:
     global last_red_pulse, last_green_pulse
 
     frame = request.make_array("main")
@@ -70,13 +71,17 @@ def process_frame(request):
     print()
 
 
-red_output = OutputDevice(RED_GPIO_PIN)
-green_output = OutputDevice(GREEN_GPIO_PIN)
+if __name__ == "__main__":
+    from gpiozero import OutputDevice
+    from picamera2 import Picamera2
 
-picam2 = Picamera2()
-config = picam2.create_video_configuration(main={"format": "RGB888"})
-picam2.configure(config)
-picam2.pre_callback = process_frame
-picam2.start()
+    red_output = OutputDevice(RED_GPIO_PIN)
+    green_output = OutputDevice(GREEN_GPIO_PIN)
 
-signal.pause()
+    picam2 = Picamera2()
+    config = picam2.create_video_configuration(main={"format": "RGB888"})
+    picam2.configure(config)
+    picam2.pre_callback = process_frame
+    picam2.start()
+
+    signal.pause()

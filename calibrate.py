@@ -1,26 +1,25 @@
 import cv2
-import numpy as np
-from picamera2 import Picamera2
 
-picam2 = Picamera2()
-config = picam2.create_still_configuration(main={"format": "RGB888"})
-picam2.configure(config)
-picam2.start()
+if __name__ == "__main__":
+    from picamera2 import Picamera2
 
-frame = picam2.capture_array()
-hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
+    picam2 = Picamera2()
+    config = picam2.create_still_configuration(main={"format": "RGB888"})
+    picam2.configure(config)
+    picam2.start()
 
-h, w = frame.shape[:2]
-center = hsv[h // 4 : 3 * h // 4, w // 4 : 3 * w // 4]
+    frame = picam2.capture_array()
+    hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
 
-print(f"Center region HSV stats:")
-print(f"  H: min={center[:,:,0].min()}  max={center[:,:,0].max()}  mean={center[:,:,0].mean():.0f}")
-print(f"  S: min={center[:,:,1].min()}  max={center[:,:,1].max()}  mean={center[:,:,1].mean():.0f}")
-print(f"  V: min={center[:,:,2].min()}  max={center[:,:,2].max()}  mean={center[:,:,2].mean():.0f}")
+    h, w = frame.shape[:2]
+    center = hsv[h // 4 : 3 * h // 4, w // 4 : 3 * w // 4]
 
-cv2.imwrite("calibrate.jpg", cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
-print("Saved calibrate.jpg")
+    print("Center region HSV stats:")
+    print(f"  H: min={center[:, :, 0].min()}  max={center[:, :, 0].max()}  mean={center[:, :, 0].mean():.0f}")
+    print(f"  S: min={center[:, :, 1].min()}  max={center[:, :, 1].max()}  mean={center[:, :, 1].mean():.0f}")
+    print(f"  V: min={center[:, :, 2].min()}  max={center[:, :, 2].max()}  mean={center[:, :, 2].mean():.0f}")
 
-picam2.stop()
+    cv2.imwrite("calibrate.jpg", cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
+    print("Saved calibrate.jpg")
 
-
+    picam2.stop()
