@@ -12,7 +12,7 @@ from wro.config import (
     PinConfig,
     RaceConfig,
     ReflectanceConfig,
-    ServoConfig,
+    SteeringConfig,
     VisionConfig,
 )
 from wro.encoder import Encoder
@@ -21,7 +21,6 @@ from wro.motor_driver import MotorDriver
 from wro.pid import PIDController
 from wro.race_controller import RaceController
 from wro.reflectance_sensor import ReflectanceSensor
-from wro.servo import ServoDriver
 from wro.vision import Camera
 
 
@@ -30,7 +29,7 @@ class Robot:
         self,
         pins: PinConfig | None = None,
         motor_config: MotorConfig | None = None,
-        servo_config: ServoConfig | None = None,
+        steering_config: SteeringConfig | None = None,
         motion_config: MotionConfig | None = None,
         encoder_config: EncoderConfig | None = None,
         pid_config: PidConfig | None = None,
@@ -41,9 +40,16 @@ class Robot:
         self._pins = pins or PinConfig()
         self._running = False
 
-        self._motor = MotorDriver(motor_config or MotorConfig(), self._pins)
-        self._servo = ServoDriver(servo_config or ServoConfig(), self._pins)
-        self._motion = MotionController(motion_config or MotionConfig(), self._motor, self._servo)
+        _mc = motor_config or MotorConfig()
+        _sc = steering_config or SteeringConfig()
+
+        self._drive_motor = MotorDriver(_mc, self._pins.drive_en, self._pins.drive_in1, self._pins.drive_in2)
+        steer_motor_config = MotorConfig(pwm_frequency=_sc.pwm_frequency)
+        self._steer_motor = MotorDriver(
+            steer_motor_config, self._pins.steer_en, self._pins.steer_in1, self._pins.steer_in2
+        )
+
+        self._motion = MotionController(motion_config or MotionConfig(), self._drive_motor, self._steer_motor, _sc)
         self._encoder = Encoder(encoder_config or EncoderConfig(), self._pins)
         self._pid = PIDController(pid_config or PidConfig())
         self._reflectance = ReflectanceSensor(reflectance_config or ReflectanceConfig(), self._pins)

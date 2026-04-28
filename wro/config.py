@@ -7,11 +7,12 @@ import numpy as np
 
 @dataclass
 class PinConfig:
-    motor_pwm: int | None = None
-    motor_direction: int | None = None
-    motor_sleep: int | None = None
-    motor_fault: int | None = None
-    servo: int | None = None
+    drive_en: int | None = None
+    drive_in1: int | None = None
+    drive_in2: int | None = None
+    steer_en: int | None = None
+    steer_in1: int | None = None
+    steer_in2: int | None = None
     encoder_a: int | None = None
     encoder_b: int | None = None
     reflectance_orange: int | None = None
@@ -21,31 +22,28 @@ class PinConfig:
 
 @dataclass
 class MotorConfig:
-    pwm_frequency: int = 25_000
+    pwm_frequency: int = 1_000
     ramp_step_percent: int = 5
     ramp_step_delay_s: float = 0.02
     min_effective_percent: int = 0
 
 
 @dataclass
-class ServoConfig:
-    min_pulse_ms: float = 1.0
-    max_pulse_ms: float = 2.0
-    min_angle: float = 0.0
-    max_angle: float = 180.0
-    center_angle: float = 90.0
-    max_speed_deg_per_s: float = 300.0
+class SteeringConfig:
+    pwm_frequency: int = 1_000
+    max_angle: float = 30.0
+    max_speed_percent: float = 100.0
+    min_speed_percent: float = 30.0
 
 
 @dataclass
 class MotionConfig:
     max_steering_angle: float = 30.0
-    servo_center_angle: float = 90.0
-    steering_servo_id: int = 0
     forward_is_clockwise: bool = True
     center_on_stop: bool = True
     velocity_deadzone: float = 0.01
     velocity_to_speed_scale: float = 100.0
+    steering_deadzone: float = 0.5
 
 
 @dataclass
