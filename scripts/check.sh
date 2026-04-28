@@ -26,7 +26,7 @@ fi
 
 echo ""
 echo "=== Mypy ==="
-if mypy main.py calibrate.py; then
+if mypy wro/ main.py calibrate.py; then
     echo "PASSED"
 else
     FAILED=1

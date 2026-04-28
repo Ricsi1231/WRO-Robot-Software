@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 py-modules = ["main", "calibrate"]
+packages = ["wro"]
 
 [project]
 name = "wro-robot-software"
@@ -36,7 +37,7 @@ warn_return_any = true
 warn_unused_configs = true
 
 [[tool.mypy.overrides]]
-module = ["picamera2.*", "gpiozero.*", "cv2.*"]
+module = ["picamera2.*", "gpiozero.*", "cv2.*", "pigpio.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

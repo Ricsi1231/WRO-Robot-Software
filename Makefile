@@ -13,7 +13,7 @@ lint:
 	ruff check .
 
 typecheck:
-	mypy main.py calibrate.py
+	mypy wro/ main.py calibrate.py
 
 test:
 	pytest
