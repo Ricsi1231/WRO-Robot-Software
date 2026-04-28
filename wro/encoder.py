@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import threading
+import time
 from typing import Any
 
 from wro.config import EncoderConfig, PinConfig
@@ -17,6 +18,7 @@ class Encoder:
         self._lock = threading.Lock()
         self._running = False
         self._timer: threading.Timer | None = None
+        self._last_calc_time: float = 0.0
         self._pi: Any = None
         self._cb_a: Any = None
         self._cb_b: Any = None
@@ -39,6 +41,7 @@ class Encoder:
             self._pi = None
 
         self._running = True
+        self._last_calc_time = time.monotonic()
         self._schedule_rpm_calc()
 
     def stop(self) -> None:
@@ -96,13 +99,21 @@ class Encoder:
         self._timer.start()
 
     def _calc_rpm(self) -> None:
+        now = time.monotonic()
+        dt = now - self._last_calc_time
+        self._last_calc_time = now
+
+        if dt <= 0:
+            self._schedule_rpm_calc()
+            return
+
         with self._lock:
             delta = self._ticks - self._last_ticks
             self._last_ticks = self._ticks
 
         counts_per_rev = self._config.pulses_per_rev * 4
         revolutions = delta / counts_per_rev
-        raw_rpm = revolutions / self._config.rpm_calc_period_s * 60.0
+        raw_rpm = revolutions / dt * 60.0
 
         alpha = self._config.ema_alpha
         with self._lock:

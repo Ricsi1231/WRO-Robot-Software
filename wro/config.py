@@ -83,6 +83,7 @@ class RaceConfig:
     pillar_steer_duration_s: float = 0.8
     corner_steering_angle: float = 25.0
     corner_steer_duration_s: float = 0.6
+    clockwise: bool = True
 
 
 @dataclass

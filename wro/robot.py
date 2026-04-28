@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import contextlib
 import time
+import traceback
 from typing import Any
 
 from wro.config import (
@@ -64,11 +66,16 @@ class Robot:
         )
 
     def init(self) -> None:
-        self._motion.init()
-        self._encoder.start()
-        self._reflectance.start()
-        self._camera.start()
-        self._race.start()
+        try:
+            self._motion.init()
+            self._encoder.start()
+            self._reflectance.start()
+            self._camera.start()
+            self._race.start()
+        except Exception:
+            traceback.print_exc()
+            self._cleanup()
+            raise
 
     def run(self) -> None:
         self._running = True
@@ -84,9 +91,17 @@ class Robot:
 
     def shutdown(self, _signum: int = 0, _frame: Any = None) -> None:
         self._running = False
-        self._camera.stop()
-        self._reflectance.stop()
-        self._encoder.stop()
-        self._motion.stop()
-        self._motion.cleanup()
-        raise SystemExit(0)
+        self._cleanup()
+        if _signum != 0:
+            raise SystemExit(0)
+
+    def _cleanup(self) -> None:
+        with contextlib.suppress(Exception):
+            self._camera.stop()
+        with contextlib.suppress(Exception):
+            self._reflectance.stop()
+        with contextlib.suppress(Exception):
+            self._encoder.stop()
+        with contextlib.suppress(Exception):
+            self._motion.stop()
+            self._motion.cleanup()

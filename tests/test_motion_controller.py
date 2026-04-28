@@ -71,6 +71,7 @@ def test_stop_stops_both() -> None:
     drive.stop.assert_called()
     steer.stop.assert_called()
     assert mc.velocity == 0.0
+    assert mc.steering_angle == 0.0
 
 
 def test_emergency_stop_brakes_both() -> None:

@@ -51,3 +51,14 @@ def test_detection_flags() -> None:
     result = detect_color(frame, CONFIG)
     assert result.red_detected is True
     assert result.green_detected is False
+
+
+def test_below_threshold_not_detected() -> None:
+    frame = np.zeros((100, 100, 3), dtype=np.uint8)
+    frame[0:2, 0:2, 0] = 10
+    frame[0:2, 0:2, 1] = 200
+    frame[0:2, 0:2, 2] = 200
+    result = detect_color(frame, CONFIG)
+    assert result.red_pixels > 0
+    assert result.red_pixels < CONFIG.min_pixel_count
+    assert result.red_detected is False

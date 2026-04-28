@@ -77,3 +77,35 @@ def test_negative_error() -> None:
         pid.compute(0.0, 0.0)
         output = pid.compute(0.0, 50.0)
     assert output < 0
+
+
+def test_integral_accumulation() -> None:
+    pid = _make_pid(kp=0.0, ki=10.0)
+    times = [FIXED_TIME + i * 0.02 for i in range(5)]
+    with patch.object(time, "monotonic", side_effect=times):
+        pid.compute(10.0, 0.0)
+        pid.compute(10.0, 0.0)
+        pid.compute(10.0, 0.0)
+        pid.compute(10.0, 0.0)
+        output = pid.compute(10.0, 0.0)
+    assert output > 0
+
+
+def test_integral_anti_windup() -> None:
+    config = PidConfig(kp=0.0, ki=100.0, max_integral=5.0, max_output=1000.0)
+    pid = PIDController(config)
+    times = [FIXED_TIME + i * 0.1 for i in range(20)]
+    with patch.object(time, "monotonic", side_effect=times):
+        for _ in range(20):
+            pid.compute(100.0, 0.0)
+    assert abs(pid.output) <= 100.0 * 5.0
+
+
+def test_derivative_output() -> None:
+    pid = _make_pid(kp=0.0, kd=1.0)
+    with patch.object(time, "monotonic", side_effect=[FIXED_TIME, FIXED_TIME + 0.02, FIXED_TIME + 0.04]):
+        pid.compute(0.0, 0.0)
+        pid.compute(0.0, 0.0)
+        output = pid.compute(0.0, 100.0)
+    assert output < 0
+    assert pid.last_derivative != 0.0

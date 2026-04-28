@@ -39,7 +39,7 @@ class RaceController:
         self._start_signal_received = False
         self._corner_count = 0
         self._lap_count = 0
-        self._clockwise = True
+        self._clockwise = config.clockwise
 
         self._last_corner_time: float = 0.0
         self._in_corner_maneuver = False
@@ -100,6 +100,7 @@ class RaceController:
             if now - self._avoidance_start_time >= self._config.pillar_steer_duration_s:
                 self._in_avoidance_maneuver = False
                 self._motion.set_steering_angle(0.0)
+                self._motion.set_velocity(self._config.cruise_velocity)
         elif detection.green_detected:
             self._in_avoidance_maneuver = True
             self._avoidance_start_time = now
@@ -116,8 +117,9 @@ class RaceController:
         if self._in_corner_maneuver:
             if now - self._corner_start_time >= self._config.corner_steer_duration_s:
                 self._in_corner_maneuver = False
-                self._motion.set_steering_angle(0.0)
-                self._motion.set_velocity(self._config.cruise_velocity)
+                if not self._in_avoidance_maneuver:
+                    self._motion.set_steering_angle(0.0)
+                    self._motion.set_velocity(self._config.cruise_velocity)
         elif not self._in_avoidance_maneuver:
             detected = self._reflectance.detected_class
             if detected == ReflectanceClass.ORANGE and (now - self._last_corner_time) >= self._config.corner_debounce_s:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass
 from typing import Any
 
@@ -39,6 +40,7 @@ class Camera:
     def __init__(self, config: VisionConfig) -> None:
         self._config = config
         self._latest: DetectionResult = DetectionResult(0, 0, False, False)
+        self._lock = threading.Lock()
         self._picam2: Any = None
 
     def start(self) -> None:
@@ -53,13 +55,17 @@ class Camera:
     def stop(self) -> None:
         if self._picam2 is not None:
             self._picam2.stop()
+            self._picam2.close()
             self._picam2 = None
 
     @property
     def latest_detection(self) -> DetectionResult:
-        return self._latest
+        with self._lock:
+            return self._latest
 
     def _on_frame(self, request: Any) -> None:
         frame = request.make_array("main")
         hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
-        self._latest = detect_color(hsv, self._config)
+        result = detect_color(hsv, self._config)
+        with self._lock:
+            self._latest = result

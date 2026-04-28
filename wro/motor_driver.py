@@ -30,6 +30,7 @@ class MotorDriver:
             self._in1 = DigitalOutputDevice(self._in1_pin)
         if self._in2_pin is not None:
             self._in2 = DigitalOutputDevice(self._in2_pin)
+        self._apply_direction()
 
     def set_speed(self, percent: int) -> None:
         percent = max(MIN_SPEED, min(MAX_SPEED, percent))
