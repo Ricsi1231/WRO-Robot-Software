@@ -9,8 +9,8 @@ if [ -f "$ENV_FILE" ]; then
     source "$ENV_FILE"
 fi
 
-PI_HOST="${PI_HOST:-pi@raspberrypi.local}"
-PI_DIR="${PI_DIR:-/home/pi/robot}"
+PI_HOST="${PI_HOST:-rasberry@172.31.11.227}"
+PI_DIR="${PI_DIR:-/home/rasberry/robot}"
 
 cd "$PROJECT_DIR"
 

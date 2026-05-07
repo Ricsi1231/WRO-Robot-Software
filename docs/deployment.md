@@ -13,8 +13,8 @@ cp deploy.env.example deploy.env
 Edit `deploy.env`:
 
 ```bash
-PI_HOST=pi@raspberrypi.local
-PI_DIR=/home/pi/robot
+PI_HOST=rasberry@172.31.11.227
+PI_DIR=/home/rasberry/robot
 ```
 
 `deploy.env` is ignored by Git so local hostnames, usernames, and paths are not committed.
@@ -86,4 +86,3 @@ The Pi should have:
 - A writable target directory matching `PI_DIR`
 
 The current deployment script copies source files. It does not install system packages or create a remote virtual environment.
-

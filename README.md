@@ -60,8 +60,8 @@ cp deploy.env.example deploy.env
 Then edit `deploy.env` for your Pi:
 
 ```bash
-PI_HOST=pi@raspberrypi.local
-PI_DIR=/home/pi/robot
+PI_HOST=rasberry@172.31.11.227
+PI_DIR=/home/rasberry/robot
 ```
 
 Deploy and run remotely:
@@ -137,4 +137,3 @@ This runs:
 - `pytest`
 
 CI runs the same checks on GitHub Actions for pushes to `dev` and pull requests targeting `main`.
-
