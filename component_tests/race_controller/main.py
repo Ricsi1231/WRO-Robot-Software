@@ -86,6 +86,8 @@ def main() -> None:
     controller.update()
     controller.update()
     print(f"corners={controller.corner_count} laps={controller.lap_count} state={controller.state.name}")
+    controller.update()
+    print(f"final_state={controller.state.name}")
 
 
 if __name__ == "__main__":
