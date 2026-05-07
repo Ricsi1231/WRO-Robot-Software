@@ -88,10 +88,10 @@ class RaceConfig:
 
 @dataclass
 class VisionConfig:
-    red_lower_1: np.ndarray = field(default_factory=lambda: np.array([0, 100, 80]))
-    red_upper_1: np.ndarray = field(default_factory=lambda: np.array([15, 255, 255]))
-    red_lower_2: np.ndarray = field(default_factory=lambda: np.array([170, 100, 80]))
-    red_upper_2: np.ndarray = field(default_factory=lambda: np.array([180, 255, 255]))
+    red_lower_1: np.ndarray = field(default_factory=lambda: np.array([140, 180, 100]))
+    red_upper_1: np.ndarray = field(default_factory=lambda: np.array([165, 255, 255]))
+    red_lower_2: np.ndarray = field(default_factory=lambda: np.array([0, 0, 1]))
+    red_upper_2: np.ndarray = field(default_factory=lambda: np.array([0, 0, 0]))
     green_lower: np.ndarray = field(default_factory=lambda: np.array([45, 80, 60]))
     green_upper: np.ndarray = field(default_factory=lambda: np.array([85, 255, 255]))
     min_pixel_count: int = 10_000

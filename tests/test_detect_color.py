@@ -8,21 +8,21 @@ CONFIG = VisionConfig()
 
 def test_detect_red() -> None:
     frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    frame[:, :, 0] = 10
-    frame[:, :, 1] = 200
+    frame[:, :, 0] = 150
+    frame[:, :, 1] = 240
     frame[:, :, 2] = 200
     result = detect_color(frame, CONFIG)
     assert result.red_pixels > 0
     assert result.green_pixels == 0
 
 
-def test_detect_red_upper_range() -> None:
+def test_normal_red_hue_not_detected_for_this_camera_calibration() -> None:
     frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    frame[:, :, 0] = 175
+    frame[:, :, 0] = 10
     frame[:, :, 1] = 200
     frame[:, :, 2] = 200
     result = detect_color(frame, CONFIG)
-    assert result.red_pixels > 0
+    assert result.red_pixels == 0
     assert result.green_pixels == 0
 
 
@@ -45,8 +45,8 @@ def test_detect_nothing() -> None:
 
 def test_detection_flags() -> None:
     frame = np.zeros((101, 100, 3), dtype=np.uint8)
-    frame[:, :, 0] = 10
-    frame[:, :, 1] = 200
+    frame[:, :, 0] = 150
+    frame[:, :, 1] = 240
     frame[:, :, 2] = 200
     result = detect_color(frame, CONFIG)
     assert result.red_detected is True
@@ -55,8 +55,8 @@ def test_detection_flags() -> None:
 
 def test_below_threshold_not_detected() -> None:
     frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    frame[0:50, 0:50, 0] = 10
-    frame[0:50, 0:50, 1] = 200
+    frame[0:50, 0:50, 0] = 150
+    frame[0:50, 0:50, 1] = 240
     frame[0:50, 0:50, 2] = 200
     result = detect_color(frame, CONFIG)
     assert result.red_pixels > 0
@@ -66,8 +66,8 @@ def test_below_threshold_not_detected() -> None:
 
 def test_red_noise_below_threshold_not_detected() -> None:
     frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    frame[0:95, :, 0] = 10
-    frame[0:95, :, 1] = 200
+    frame[0:95, :, 0] = 150
+    frame[0:95, :, 1] = 240
     frame[0:95, :, 2] = 200
     result = detect_color(frame, CONFIG)
     assert result.red_pixels == 9_500
@@ -75,13 +75,13 @@ def test_red_noise_below_threshold_not_detected() -> None:
     assert result.red_detected is False
 
 
-def test_wrong_red_hue_not_detected_as_green() -> None:
+def test_measured_red_hue_not_detected_as_green() -> None:
     frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    frame[:, :, 0] = 140
+    frame[:, :, 0] = 150
     frame[:, :, 1] = 250
     frame[:, :, 2] = 220
     result = detect_color(frame, CONFIG)
-    assert result.red_pixels == 0
+    assert result.red_pixels > 0
     assert result.green_pixels == 0
 
 
