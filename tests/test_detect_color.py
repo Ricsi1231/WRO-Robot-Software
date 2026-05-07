@@ -44,7 +44,7 @@ def test_detect_nothing() -> None:
 
 
 def test_detection_flags() -> None:
-    frame = np.zeros((100, 100, 3), dtype=np.uint8)
+    frame = np.zeros((101, 100, 3), dtype=np.uint8)
     frame[:, :, 0] = 10
     frame[:, :, 1] = 200
     frame[:, :, 2] = 200
@@ -55,11 +55,22 @@ def test_detection_flags() -> None:
 
 def test_below_threshold_not_detected() -> None:
     frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    frame[0:2, 0:2, 0] = 10
-    frame[0:2, 0:2, 1] = 200
-    frame[0:2, 0:2, 2] = 200
+    frame[0:50, 0:50, 0] = 10
+    frame[0:50, 0:50, 1] = 200
+    frame[0:50, 0:50, 2] = 200
     result = detect_color(frame, CONFIG)
     assert result.red_pixels > 0
+    assert result.red_pixels < CONFIG.min_pixel_count
+    assert result.red_detected is False
+
+
+def test_red_noise_below_threshold_not_detected() -> None:
+    frame = np.zeros((100, 100, 3), dtype=np.uint8)
+    frame[0:95, :, 0] = 10
+    frame[0:95, :, 1] = 200
+    frame[0:95, :, 2] = 200
+    result = detect_color(frame, CONFIG)
+    assert result.red_pixels == 9_500
     assert result.red_pixels < CONFIG.min_pixel_count
     assert result.red_detected is False
 

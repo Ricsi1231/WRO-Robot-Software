@@ -94,7 +94,7 @@ class VisionConfig:
     red_upper_2: np.ndarray = field(default_factory=lambda: np.array([180, 255, 255]))
     green_lower: np.ndarray = field(default_factory=lambda: np.array([45, 80, 60]))
     green_upper: np.ndarray = field(default_factory=lambda: np.array([85, 255, 255]))
-    min_pixel_count: int = 500
+    min_pixel_count: int = 10_000
 
 
 MAIN_LOOP_INTERVAL_S = 0.02
