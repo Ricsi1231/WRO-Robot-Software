@@ -88,12 +88,36 @@ python3 calibrate.py
 
 Generated calibration outputs are ignored by Git.
 
+## Component Tests
+
+Manual per-component test scripts live in `component_tests/`. Each component has its own `main.py` and uses shared pin values from `component_tests/hardware_config.py`.
+
+Edit `TEST_PINS` before running hardware tests on the Pi, then run one component at a time:
+
+```bash
+./scripts/deploy-run.sh component_tests/motor/main.py
+./scripts/deploy-run.sh component_tests/steering/main.py
+./scripts/deploy-run.sh component_tests/motion/main.py
+./scripts/deploy-run.sh component_tests/encoder/main.py
+./scripts/deploy-run.sh component_tests/reflectance/main.py
+./scripts/deploy-run.sh component_tests/camera/main.py
+```
+
+Software-only component tests can also run locally:
+
+```bash
+python3 component_tests/pid/main.py
+python3 component_tests/path_planner/main.py
+python3 component_tests/race_controller/main.py
+```
+
 ## Project Layout
 
 ```text
 .
 ├── main.py                 # Robot runtime entry point
 ├── calibrate.py            # Camera HSV calibration helper
+├── component_tests/        # Manual per-component test entrypoints
 ├── wro/                    # Robot software package
 ├── tests/                  # Unit tests for off-device logic
 ├── scripts/                # Setup, check, deploy, and run scripts
@@ -133,7 +157,7 @@ This runs:
 
 - `ruff check .`
 - `ruff format --check .`
-- `mypy wro/ main.py calibrate.py`
+- `mypy wro/ main.py calibrate.py component_tests`
 - `pytest`
 
 CI runs the same checks on GitHub Actions for pushes to `dev` and pull requests targeting `main`.

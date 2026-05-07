@@ -32,7 +32,7 @@ fi
 
 echo ""
 echo "=== Mypy ==="
-if mypy wro/ main.py calibrate.py; then
+if mypy wro/ main.py calibrate.py component_tests; then
     echo "PASSED"
 else
     FAILED=1

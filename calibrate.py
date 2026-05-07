@@ -5,10 +5,7 @@ CALIBRATION_TEXT_FILE = "calibrate.txt"
 
 
 def _hsv_stats_text(channel_name: str, channel: np.ndarray) -> str:
-    return (
-        f"  {channel_name}: min={channel.min()}  max={channel.max()}  "
-        f"mean={channel.mean():.0f}"
-    )
+    return f"  {channel_name}: min={channel.min()}  max={channel.max()}  mean={channel.mean():.0f}"
 
 
 if __name__ == "__main__":
