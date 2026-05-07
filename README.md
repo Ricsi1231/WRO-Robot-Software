@@ -80,13 +80,13 @@ To run a different script remotely, pass it to the script wrapper:
 
 ## Calibration
 
-`calibrate.py` captures one camera frame, prints HSV statistics for the center region, and writes `calibrate.jpg`. Use those values to tune the HSV thresholds in `VisionConfig`.
+`calibrate.py` captures one camera frame, prints HSV statistics for the center region, writes them to `calibrate.txt`, and writes `calibrate.jpg`. Use those values to tune the HSV thresholds in `VisionConfig`.
 
 ```bash
 python3 calibrate.py
 ```
 
-Generated calibration images are ignored by Git.
+Generated calibration outputs are ignored by Git.
 
 ## Project Layout
 

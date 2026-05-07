@@ -13,3 +13,4 @@ deploy.env
 .ruff_cache/
 *.jpg
 *.png
+calibrate.txt

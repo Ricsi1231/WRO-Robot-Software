@@ -1,4 +1,15 @@
 import cv2
+import numpy as np
+
+CALIBRATION_TEXT_FILE = "calibrate.txt"
+
+
+def _hsv_stats_text(channel_name: str, channel: np.ndarray) -> str:
+    return (
+        f"  {channel_name}: min={channel.min()}  max={channel.max()}  "
+        f"mean={channel.mean():.0f}"
+    )
+
 
 if __name__ == "__main__":
     from picamera2 import Picamera2
@@ -14,10 +25,19 @@ if __name__ == "__main__":
     h, w = frame.shape[:2]
     center = hsv[h // 4 : 3 * h // 4, w // 4 : 3 * w // 4]
 
-    print("Center region HSV stats:")
-    print(f"  H: min={center[:, :, 0].min()}  max={center[:, :, 0].max()}  mean={center[:, :, 0].mean():.0f}")
-    print(f"  S: min={center[:, :, 1].min()}  max={center[:, :, 1].max()}  mean={center[:, :, 1].mean():.0f}")
-    print(f"  V: min={center[:, :, 2].min()}  max={center[:, :, 2].max()}  mean={center[:, :, 2].mean():.0f}")
+    stats_lines = [
+        "Center region HSV stats:",
+        _hsv_stats_text("H", center[:, :, 0]),
+        _hsv_stats_text("S", center[:, :, 1]),
+        _hsv_stats_text("V", center[:, :, 2]),
+    ]
+
+    print("\n".join(stats_lines))
+
+    with open(CALIBRATION_TEXT_FILE, "w", encoding="utf-8") as calibration_file:
+        calibration_file.write("\n".join(stats_lines))
+        calibration_file.write("\n")
+    print(f"Saved {CALIBRATION_TEXT_FILE}")
 
     cv2.imwrite("calibrate.jpg", cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))
     print("Saved calibrate.jpg")
