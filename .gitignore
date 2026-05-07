@@ -14,3 +14,4 @@ deploy.env
 *.jpg
 *.png
 calibrate.txt
+camera_diagnostic_*.txt

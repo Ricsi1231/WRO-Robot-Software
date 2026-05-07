@@ -100,7 +100,9 @@ Edit `TEST_PINS` before running hardware tests on the Pi, then run one component
 ./scripts/deploy-run.sh component_tests/motion/main.py
 ./scripts/deploy-run.sh component_tests/encoder/main.py
 ./scripts/deploy-run.sh component_tests/reflectance/main.py
-./scripts/deploy-run.sh component_tests/camera/main.py
+./scripts/deploy-run.sh component_tests/camera/main.py background
+./scripts/deploy-run.sh component_tests/camera/main.py red
+./scripts/deploy-run.sh component_tests/camera/main.py green
 ```
 
 Software-only component tests can also run locally:
