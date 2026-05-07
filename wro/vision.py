@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import threading
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import cv2
 import numpy as np
@@ -36,6 +36,10 @@ def detect_color(hsv_frame: np.ndarray, config: VisionConfig) -> DetectionResult
     )
 
 
+def frame_to_hsv(frame: np.ndarray) -> np.ndarray:
+    return cast(np.ndarray, cv2.cvtColor(frame, cv2.COLOR_BGR2HSV))
+
+
 class Camera:
     def __init__(self, config: VisionConfig) -> None:
         self._config = config
@@ -65,7 +69,7 @@ class Camera:
 
     def _on_frame(self, request: Any) -> None:
         frame = request.make_array("main")
-        hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
+        hsv = frame_to_hsv(frame)
         result = detect_color(hsv, self._config)
         with self._lock:
             self._latest = result

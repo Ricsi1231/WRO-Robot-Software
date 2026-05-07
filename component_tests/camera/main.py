@@ -17,7 +17,7 @@ import numpy as np
 from component_tests.common import cleanup_safely
 from component_tests.hardware_config import TEST_CAMERA_DURATION_S, TEST_PRINT_INTERVAL_S
 from wro.config import VisionConfig
-from wro.vision import DetectionResult, detect_color
+from wro.vision import DetectionResult, detect_color, frame_to_hsv
 
 DIAGNOSTIC_MODES = ("background", "red", "green")
 
@@ -49,24 +49,50 @@ def _channel_stats_text(channel_name: str, channel: np.ndarray) -> str:
     return f"{channel_name}: min={channel.min()} max={channel.max()} mean={channel.mean():.0f}"
 
 
-def _reading_lines(mode: str, detection: DetectionResult, total_pixels: int, hsv_frame: np.ndarray) -> list[str]:
+def _channel_mean_lines(frame: np.ndarray) -> list[str]:
+    return [
+        f"channel_0_mean={frame[:, :, 0].mean():.0f}",
+        f"channel_1_mean={frame[:, :, 1].mean():.0f}",
+        f"channel_2_mean={frame[:, :, 2].mean():.0f}",
+    ]
+
+
+def _detection_line(label: str, detection: DetectionResult, total_pixels: int) -> str:
     red_percent = detection.red_pixels / total_pixels * 100.0
     green_percent = detection.green_pixels / total_pixels * 100.0
 
+    return (
+        f"{label}: "
+        f"red_pixels={detection.red_pixels} "
+        f"green_pixels={detection.green_pixels} "
+        f"red_percent={red_percent:.2f} "
+        f"green_percent={green_percent:.2f} "
+        f"red_detected={detection.red_detected} "
+        f"green_detected={detection.green_detected}"
+    )
+
+
+def _reading_lines(
+    mode: str,
+    rgb_detection: DetectionResult,
+    bgr_detection: DetectionResult,
+    total_pixels: int,
+    rgb_hsv_frame: np.ndarray,
+    bgr_hsv_frame: np.ndarray,
+    frame: np.ndarray,
+) -> list[str]:
     lines = [
         f"mode={mode}",
-        (
-            f"total_pixels={total_pixels} "
-            f"red_pixels={detection.red_pixels} "
-            f"green_pixels={detection.green_pixels} "
-            f"red_percent={red_percent:.2f} "
-            f"green_percent={green_percent:.2f} "
-            f"red_detected={detection.red_detected} "
-            f"green_detected={detection.green_detected}"
-        ),
-        "center_hsv_stats:",
+        f"total_pixels={total_pixels}",
+        "frame_channel_means:",
     ]
-    lines.extend(f"  {line}" for line in _hsv_stats_lines(hsv_frame))
+    lines.extend(f"  {line}" for line in _channel_mean_lines(frame))
+    lines.append(_detection_line("rgb2hsv_detection", rgb_detection, total_pixels))
+    lines.append("rgb2hsv_center_hsv_stats:")
+    lines.extend(f"  {line}" for line in _hsv_stats_lines(rgb_hsv_frame))
+    lines.append(_detection_line("bgr2hsv_detection", bgr_detection, total_pixels))
+    lines.append("bgr2hsv_center_hsv_stats:")
+    lines.extend(f"  {line}" for line in _hsv_stats_lines(bgr_hsv_frame))
     return lines
 
 
@@ -107,11 +133,20 @@ def main() -> None:
         with output_path.open("w", encoding="utf-8") as output_file:
             while time.monotonic() < end_time:
                 frame = picam2.capture_array()
-                hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
-                detection = detect_color(hsv, vision_config)
+                rgb_hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
+                bgr_hsv = frame_to_hsv(frame)
+                rgb_detection = detect_color(rgb_hsv, vision_config)
+                bgr_detection = detect_color(bgr_hsv, vision_config)
                 total_pixels = frame.shape[0] * frame.shape[1]
-                _print_and_write(_reading_lines(mode, detection, total_pixels, hsv), output_file)
-                time.sleep(TEST_PRINT_INTERVAL_S)
+                _print_and_write(
+                    _reading_lines(mode, rgb_detection, bgr_detection, total_pixels, rgb_hsv, bgr_hsv, frame),
+                    output_file,
+                )
+                try:
+                    time.sleep(TEST_PRINT_INTERVAL_S)
+                except KeyboardInterrupt:
+                    print("Camera diagnostic stopped.")
+                    break
     finally:
         if picam2 is not None:
             cleanup_safely(picam2.stop, picam2.close)

@@ -105,6 +105,8 @@ Edit `TEST_PINS` before running hardware tests on the Pi, then run one component
 ./scripts/deploy-run.sh component_tests/camera/main.py green
 ```
 
+The camera diagnostic prints both RGB-to-HSV and BGR-to-HSV detection results. Use the `bgr2hsv_detection` lines to verify the production camera conversion.
+
 Software-only component tests can also run locally:
 
 ```bash
