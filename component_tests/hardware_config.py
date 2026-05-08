@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from wro.config import PinConfig
 
-# Fill these in for the physical robot before running hardware tests.
 TEST_PINS = PinConfig(
     drive_en=None,
     drive_in1=None,
@@ -14,6 +13,8 @@ TEST_PINS = PinConfig(
     encoder_b=None,
     reflectance_orange=None,
     reflectance_green=None,
+    ultrasonic_trigger=None,
+    ultrasonic_echo=None,
     button=23,
 )
 

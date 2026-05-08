@@ -53,6 +53,11 @@ class FakeCamera:
         self.latest_detection = DetectionResult(0, 0, False, False)
 
 
+class FakeUltrasonic:
+    def __init__(self) -> None:
+        self.is_close = False
+
+
 def main() -> None:
     config = RaceConfig(
         total_laps=1,
@@ -66,7 +71,8 @@ def main() -> None:
     reflectance = FakeReflectance()
     pid = FakePid()
     camera = FakeCamera()
-    controller = RaceController(config, motion, encoder, reflectance, pid, camera)  # type: ignore[arg-type]
+    ultrasonic = FakeUltrasonic()
+    controller = RaceController(config, motion, encoder, reflectance, pid, camera, ultrasonic)  # type: ignore[arg-type]
 
     controller.start()
     print(f"state={controller.state.name}")
@@ -75,6 +81,7 @@ def main() -> None:
     print(f"state={controller.state.name}")
 
     camera.latest_detection = DetectionResult(1000, 0, True, False)
+    ultrasonic.is_close = True
     controller.update()
     time.sleep(0.02)
     camera.latest_detection = DetectionResult(0, 0, False, False)

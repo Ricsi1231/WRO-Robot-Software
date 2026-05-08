@@ -15,6 +15,7 @@ from wro.config import (
     RaceConfig,
     ReflectanceConfig,
     SteeringConfig,
+    UltrasonicConfig,
     VisionConfig,
 )
 from wro.encoder import Encoder
@@ -23,6 +24,7 @@ from wro.motor_driver import MotorDriver
 from wro.pid import PIDController
 from wro.race_controller import RaceController
 from wro.reflectance_sensor import ReflectanceSensor
+from wro.ultrasonic_sensor import UltrasonicSensor
 from wro.vision import Camera
 
 
@@ -36,6 +38,7 @@ class Robot:
         encoder_config: EncoderConfig | None = None,
         pid_config: PidConfig | None = None,
         reflectance_config: ReflectanceConfig | None = None,
+        ultrasonic_config: UltrasonicConfig | None = None,
         race_config: RaceConfig | None = None,
         vision_config: VisionConfig | None = None,
     ) -> None:
@@ -55,6 +58,7 @@ class Robot:
         self._encoder = Encoder(encoder_config or EncoderConfig(), self._pins)
         self._pid = PIDController(pid_config or PidConfig())
         self._reflectance = ReflectanceSensor(reflectance_config or ReflectanceConfig(), self._pins)
+        self._ultrasonic = UltrasonicSensor(ultrasonic_config or UltrasonicConfig(), self._pins)
         self._camera = Camera(vision_config or VisionConfig())
         self._race = RaceController(
             race_config or RaceConfig(),
@@ -63,6 +67,7 @@ class Robot:
             self._reflectance,
             self._pid,
             self._camera,
+            self._ultrasonic,
         )
 
     def init(self) -> None:
@@ -70,6 +75,7 @@ class Robot:
             self._motion.init()
             self._encoder.start()
             self._reflectance.start()
+            self._ultrasonic.start()
             self._camera.start()
             self._race.start()
         except Exception:
@@ -100,6 +106,8 @@ class Robot:
             self._camera.stop()
         with contextlib.suppress(Exception):
             self._reflectance.stop()
+        with contextlib.suppress(Exception):
+            self._ultrasonic.stop()
         with contextlib.suppress(Exception):
             self._encoder.stop()
         with contextlib.suppress(Exception):

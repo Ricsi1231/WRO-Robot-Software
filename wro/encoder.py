@@ -31,12 +31,12 @@ class Encoder:
 
             self._pi = pigpio.pi()
             pi = self._pi
-            pi.set_mode(self._pins.encoder_a, pigpio.INPUT)  # type: ignore[union-attr]
-            pi.set_mode(self._pins.encoder_b, pigpio.INPUT)  # type: ignore[union-attr]
-            pi.set_pull_up_down(self._pins.encoder_a, pigpio.PUD_UP)  # type: ignore[union-attr]
-            pi.set_pull_up_down(self._pins.encoder_b, pigpio.PUD_UP)  # type: ignore[union-attr]
-            self._cb_a = pi.callback(self._pins.encoder_a, pigpio.EITHER_EDGE, self._on_edge)  # type: ignore[union-attr]
-            self._cb_b = pi.callback(self._pins.encoder_b, pigpio.EITHER_EDGE, self._on_edge)  # type: ignore[union-attr]
+            pi.set_mode(self._pins.encoder_a, pigpio.INPUT)
+            pi.set_mode(self._pins.encoder_b, pigpio.INPUT)
+            pi.set_pull_up_down(self._pins.encoder_a, pigpio.PUD_UP)
+            pi.set_pull_up_down(self._pins.encoder_b, pigpio.PUD_UP)
+            self._cb_a = pi.callback(self._pins.encoder_a, pigpio.EITHER_EDGE, self._on_edge)
+            self._cb_b = pi.callback(self._pins.encoder_b, pigpio.EITHER_EDGE, self._on_edge)
         except Exception:
             self._pi = None
 
@@ -49,11 +49,11 @@ class Encoder:
         if self._timer is not None:
             self._timer.cancel()
         if self._cb_a is not None:
-            self._cb_a.cancel()  # type: ignore[union-attr]
+            self._cb_a.cancel()
         if self._cb_b is not None:
-            self._cb_b.cancel()  # type: ignore[union-attr]
+            self._cb_b.cancel()
         if self._pi is not None:
-            self._pi.stop()  # type: ignore[union-attr]
+            self._pi.stop()
 
     def reset_position(self) -> None:
         with self._lock:
@@ -83,8 +83,8 @@ class Encoder:
     def _on_edge(self, gpio: int, level: int, tick: int) -> None:
         if self._pi is None or self._pins.encoder_a is None or self._pins.encoder_b is None:
             return
-        a = self._pi.read(self._pins.encoder_a)  # type: ignore[union-attr]
-        b = self._pi.read(self._pins.encoder_b)  # type: ignore[union-attr]
+        a = self._pi.read(self._pins.encoder_a)
+        b = self._pi.read(self._pins.encoder_b)
         with self._lock:
             if gpio == self._pins.encoder_a:
                 self._ticks += 1 if a != b else -1

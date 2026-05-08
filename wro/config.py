@@ -17,6 +17,8 @@ class PinConfig:
     encoder_b: int | None = None
     reflectance_orange: int | None = None
     reflectance_green: int | None = None
+    ultrasonic_trigger: int | None = None
+    ultrasonic_echo: int | None = None
     button: int = 23
 
 
@@ -70,6 +72,13 @@ class PidConfig:
 @dataclass
 class ReflectanceConfig:
     debounce_s: float = 0.05
+
+
+@dataclass
+class UltrasonicConfig:
+    max_distance_cm: float = 200.0
+    close_distance_cm: float = 25.0
+    ema_alpha: float = 0.35
 
 
 @dataclass
