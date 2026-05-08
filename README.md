@@ -167,3 +167,7 @@ This runs:
 - `pytest`
 
 CI runs the same checks on GitHub Actions for pushes to `dev` and pull requests targeting `main`.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
