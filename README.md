@@ -100,6 +100,7 @@ Edit `TEST_PINS` before running hardware tests on the Pi, then run one component
 ./scripts/deploy-run.sh component_tests/motion/main.py
 ./scripts/deploy-run.sh component_tests/encoder/main.py
 ./scripts/deploy-run.sh component_tests/reflectance/main.py
+./scripts/deploy-run.sh component_tests/ultrasonic/main.py
 ./scripts/deploy-run.sh component_tests/camera/main.py background
 ./scripts/deploy-run.sh component_tests/camera/main.py red
 ./scripts/deploy-run.sh component_tests/camera/main.py green
@@ -137,6 +138,7 @@ Key modules:
 - `wro.motor_driver`: GPIO/PWM motor driver wrapper.
 - `wro.encoder`: quadrature encoder tracking and RPM calculation.
 - `wro.reflectance_sensor`: orange/green reflectance inputs.
+- `wro.ultrasonic_sensor`: HC-SR04 distance sensing for close obstacle gating.
 - `wro.vision`: camera frame processing and red/green detection.
 - `wro.pid`: PID controller utility.
 - `wro.path_planner`: waypoint graph and A* path planning utility.

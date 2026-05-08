@@ -11,12 +11,13 @@ This project is organized around a small runtime composition layer and testable 
 - `Encoder`
 - `PIDController`
 - `ReflectanceSensor`
+- `UltrasonicSensor`
 - `Camera`
 - `RaceController`
 
 `Robot.init()` initializes hardware-facing components in order, starts the sensors and camera, then resets the race controller. If startup fails, it prints the traceback, cleans up initialized resources, and re-raises the exception.
 
-`Robot.run()` executes the race controller every `MAIN_LOOP_INTERVAL_S`, currently 20 ms. `Robot.shutdown()` stops the loop and closes camera, reflectance, encoder, and motion resources.
+`Robot.run()` executes the race controller every `MAIN_LOOP_INTERVAL_S`, currently 20 ms. `Robot.shutdown()` stops the loop and closes camera, ultrasonic, reflectance, encoder, and motion resources.
 
 ## Race State Machine
 
@@ -31,8 +32,8 @@ On start, the controller resets encoder position, PID state, corner count, and l
 
 While running:
 
-- Camera red detection triggers a temporary right avoidance steer.
-- Camera green detection triggers a temporary left avoidance steer.
+- Camera red detection plus a close ultrasonic obstacle triggers a temporary right avoidance steer.
+- Camera green detection plus a close ultrasonic obstacle triggers a temporary left avoidance steer.
 - Orange reflectance detection counts corners after debounce.
 - Every `RaceConfig.corners_per_lap` corners increments the lap count.
 - When `RaceConfig.total_laps` is reached, the state moves to `STOPPING`.
@@ -55,6 +56,8 @@ While running:
 
 `ReflectanceSensor` uses two optional `gpiozero.Button` inputs and reports `ORANGE`, `GREEN`, or `UNKNOWN`.
 
+`UltrasonicSensor` uses an optional HC-SR04-style `gpiozero.DistanceSensor`, reports smoothed distance in centimeters, and marks obstacles close when they are within `UltrasonicConfig.close_distance_cm`.
+
 `Camera` uses `picamera2` video callbacks. Each RGB frame is converted to HSV and passed to `detect_color()`, which counts red and green mask pixels using OpenCV thresholds from `VisionConfig`.
 
 Hardware imports happen inside startup methods. This keeps imports and most tests usable on machines without Raspberry Pi libraries installed.
@@ -64,4 +67,3 @@ Hardware imports happen inside startup methods. This keeps imports and most test
 `PIDController` provides proportional, integral, and derivative control with output clamping, integral anti-windup, derivative smoothing, and settled/error state tracking.
 
 `PathPlanner` provides a small waypoint graph with A* search. It supports Manhattan, Euclidean, and octagonal heuristics, blocked nodes, duplicate-edge handling, and map clearing.
-

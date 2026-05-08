@@ -18,6 +18,8 @@ All default configuration is defined in `wro.config` as dataclasses. The project
 | `encoder_b` | Encoder channel B | `None` |
 | `reflectance_orange` | Orange/corner reflectance input | `None` |
 | `reflectance_green` | Green reflectance input | `None` |
+| `ultrasonic_trigger` | HC-SR04 trigger output | `None` |
+| `ultrasonic_echo` | HC-SR04 echo input | `None` |
 | `button` | Start button input | `23` |
 
 Most pins default to `None`, which disables those hardware outputs or inputs. Set real pin numbers before running on the physical robot.
@@ -36,6 +38,8 @@ Most pins default to `None`, which disables those hardware outputs or inputs. Se
 
 `ReflectanceConfig` controls reflectance input debounce time.
 
+`UltrasonicConfig` controls HC-SR04 maximum range, close-obstacle threshold, and distance smoothing.
+
 `VisionConfig` contains HSV threshold arrays for red and green detection plus `min_pixel_count`, the minimum number of masked pixels required for a detection flag.
 
 ## Race Configuration
@@ -53,10 +57,9 @@ Most pins default to `None`, which disables those hardware outputs or inputs. Se
 
 The following libraries are used at runtime on the Pi:
 
-- `gpiozero` for motor outputs, reflectance inputs, start button, and servo support.
+- `gpiozero` for motor outputs, reflectance inputs, ultrasonic distance, start button, and servo support.
 - `pigpio` for encoder callbacks.
 - `picamera2` for camera capture.
 - `opencv-python` and `numpy` for image processing.
 
 The Pi-specific imports are intentionally inside runtime methods such as `init()` and `start()`. This lets unit tests run on a development machine without Pi hardware packages.
-

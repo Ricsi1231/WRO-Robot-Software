@@ -8,6 +8,7 @@ from wro.encoder import Encoder
 from wro.motion_controller import MotionController
 from wro.pid import PIDController
 from wro.reflectance_sensor import ReflectanceClass, ReflectanceSensor
+from wro.ultrasonic_sensor import UltrasonicSensor
 from wro.vision import Camera
 
 
@@ -27,6 +28,7 @@ class RaceController:
         reflectance: ReflectanceSensor,
         pid: PIDController,
         camera: Camera,
+        ultrasonic: UltrasonicSensor,
     ) -> None:
         self._config = config
         self._motion = motion
@@ -34,6 +36,7 @@ class RaceController:
         self._reflectance = reflectance
         self._pid = pid
         self._camera = camera
+        self._ultrasonic = ultrasonic
 
         self._state = RaceState.IDLE
         self._start_signal_received = False
@@ -95,19 +98,20 @@ class RaceController:
     def _update_running(self) -> None:
         now = time.monotonic()
         detection = self._camera.latest_detection
+        obstacle_close = self._ultrasonic.is_close
 
         if self._in_avoidance_maneuver:
             if now - self._avoidance_start_time >= self._config.pillar_steer_duration_s:
                 self._in_avoidance_maneuver = False
                 self._motion.set_steering_angle(0.0)
                 self._motion.set_velocity(self._config.cruise_velocity)
-        elif detection.green_detected:
+        elif detection.green_detected and obstacle_close:
             self._in_avoidance_maneuver = True
             self._avoidance_start_time = now
             self._current_avoidance_angle = -self._config.pillar_avoid_angle
             self._motion.set_steering_angle(self._current_avoidance_angle)
             self._motion.set_velocity(self._config.corner_velocity)
-        elif detection.red_detected:
+        elif detection.red_detected and obstacle_close:
             self._in_avoidance_maneuver = True
             self._avoidance_start_time = now
             self._current_avoidance_angle = self._config.pillar_avoid_angle
