@@ -20,6 +20,10 @@ class MotorDriver:
         self._pwm: Any = None
         self._in1: Any = None
         self._in2: Any = None
+        self._ramp_target: int | None = None
+        self._ramp_next_step_at: float = 0.0
+        self._pending_direction: bool | None = None
+        self._pending_restore_speed: int = 0
 
     def init(self) -> None:
         from gpiozero import DigitalOutputDevice, PWMOutputDevice
@@ -33,30 +37,29 @@ class MotorDriver:
         self._apply_direction()
 
     def set_speed(self, percent: int) -> None:
-        percent = max(MIN_SPEED, min(MAX_SPEED, percent))
-        if percent > 0 and percent < self._config.min_effective_percent:
-            percent = self._config.min_effective_percent
-        self._speed = percent
-        if self._pwm is not None:
-            self._pwm.value = percent / 100.0
+        self._cancel_ramp()
+        self._apply_speed(percent)
 
     def set_direction(self, clockwise: bool) -> None:
+        self._cancel_ramp()
         if self._clockwise == clockwise:
             return
         self._clockwise = clockwise
         self._apply_direction()
 
-    def set_direction_safe(self, clockwise: bool) -> None:
+    def set_direction_safe(self, clockwise: bool, target_speed: int | None = None) -> None:
         if self._clockwise == clockwise:
+            if target_speed is not None:
+                self.set_speed(target_speed)
             return
-        original_speed = self._speed
-        self._ramp_to(0)
-        self.set_direction(clockwise)
-        if original_speed > 0:
-            target = max(original_speed, self._config.min_effective_percent)
-            self._ramp_to(target)
+        restore = self._speed if target_speed is None else max(MIN_SPEED, min(MAX_SPEED, target_speed))
+        self._pending_direction = clockwise
+        self._pending_restore_speed = restore
+        self._ramp_target = 0
+        self._ramp_next_step_at = time.monotonic()
 
     def stop(self) -> None:
+        self._cancel_ramp()
         self._speed = 0
         if self._pwm is not None:
             self._pwm.value = 0
@@ -66,6 +69,7 @@ class MotorDriver:
             self._in2.off()
 
     def brake(self) -> None:
+        self._cancel_ramp()
         self._speed = 0
         if self._pwm is not None:
             self._pwm.value = 0
@@ -74,6 +78,43 @@ class MotorDriver:
         if self._in2 is not None:
             self._in2.on()
 
+    def update(self) -> None:
+        if self._ramp_target is None:
+            return
+        now = time.monotonic()
+        if now < self._ramp_next_step_at:
+            return
+
+        step = self._config.ramp_step_percent
+        delay = self._config.ramp_step_delay_s
+        target = self._ramp_target
+        current = self._speed
+        if current < target:
+            next_speed = min(current + step, target)
+        elif current > target:
+            next_speed = max(current - step, target)
+        else:
+            next_speed = target
+
+        self._apply_speed(next_speed)
+
+        if next_speed != target:
+            self._ramp_next_step_at = now + delay
+            return
+
+        if self._pending_direction is not None and target == 0:
+            self._clockwise = self._pending_direction
+            self._apply_direction()
+            self._pending_direction = None
+            restore = self._pending_restore_speed
+            self._pending_restore_speed = 0
+            if restore > 0:
+                self._ramp_target = max(restore, self._config.min_effective_percent)
+                self._ramp_next_step_at = now + delay
+                return
+
+        self._ramp_target = None
+
     @property
     def speed(self) -> int:
         return self._speed
@@ -81,6 +122,10 @@ class MotorDriver:
     @property
     def is_running(self) -> bool:
         return self._speed > 0
+
+    @property
+    def is_ramping(self) -> bool:
+        return self._ramp_target is not None
 
     def cleanup(self) -> None:
         self.stop()
@@ -91,6 +136,19 @@ class MotorDriver:
         if self._in2 is not None:
             self._in2.close()
 
+    def _apply_speed(self, percent: int) -> None:
+        percent = max(MIN_SPEED, min(MAX_SPEED, percent))
+        if percent > 0 and percent < self._config.min_effective_percent:
+            percent = self._config.min_effective_percent
+        self._speed = percent
+        if self._pwm is not None:
+            self._pwm.value = percent / 100.0
+
+    def _cancel_ramp(self) -> None:
+        self._ramp_target = None
+        self._pending_direction = None
+        self._pending_restore_speed = 0
+
     def _apply_direction(self) -> None:
         if self._in1 is not None and self._in2 is not None:
             if self._clockwise:
@@ -99,12 +157,3 @@ class MotorDriver:
             else:
                 self._in1.off()
                 self._in2.on()
-
-    def _ramp_to(self, target: int) -> None:
-        step = self._config.ramp_step_percent
-        delay = self._config.ramp_step_delay_s
-        current = self._speed
-        while current != target:
-            current = min(current + step, target) if current < target else max(current - step, target)
-            self.set_speed(current)
-            time.sleep(delay)

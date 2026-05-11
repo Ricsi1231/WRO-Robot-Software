@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+import time
+from unittest.mock import MagicMock, patch
 
 from wro.config import MotorConfig
 from wro.motor_driver import MotorDriver
 
 
-def _make_driver() -> tuple[MotorDriver, MagicMock, MagicMock, MagicMock]:
-    config = MotorConfig(pwm_frequency=1_000)
+def _make_driver(config: MotorConfig | None = None) -> tuple[MotorDriver, MagicMock, MagicMock, MagicMock]:
+    config = config or MotorConfig(pwm_frequency=1_000)
     driver = MotorDriver(config, en_pin=12, in1_pin=5, in2_pin=6)
 
     mock_pwm = MagicMock()
@@ -77,3 +78,91 @@ def test_is_running() -> None:
     assert driver.is_running
     driver.stop()
     assert not driver.is_running
+
+
+def test_update_is_noop_when_no_ramp_in_progress() -> None:
+    driver, mock_pwm, _, _ = _make_driver()
+    driver.set_speed(50)
+    mock_pwm.reset_mock()
+    driver.update()
+    assert not driver.is_ramping
+    assert mock_pwm.value == 0.5
+
+
+def test_set_direction_safe_starts_rampdown_does_not_block() -> None:
+    driver, _, _, _ = _make_driver(MotorConfig(ramp_step_percent=5, ramp_step_delay_s=0.02))
+    driver._clockwise = True
+    driver.set_speed(40)
+    with patch.object(time, "monotonic", return_value=1000.0):
+        driver.set_direction_safe(False)
+    assert driver.is_ramping
+    assert driver.speed == 40
+    assert driver._clockwise is True
+
+
+def test_full_reverse_sequence_rampdown_flip_rampup() -> None:
+    config = MotorConfig(ramp_step_percent=10, ramp_step_delay_s=0.02)
+    driver, _, mock_in1, mock_in2 = _make_driver(config)
+    driver._clockwise = True
+    driver.set_speed(20)
+    mock_in1.reset_mock()
+    mock_in2.reset_mock()
+
+    times = [1000.0 + i * 0.02 for i in range(20)]
+    with patch.object(time, "monotonic", side_effect=times):
+        driver.set_direction_safe(False, target_speed=30)
+        for _ in range(15):
+            driver.update()
+
+    assert not driver.is_ramping
+    assert driver._clockwise is False
+    assert driver.speed == 30
+    mock_in1.off.assert_called()
+    mock_in2.on.assert_called()
+
+
+def test_set_speed_cancels_in_progress_ramp() -> None:
+    driver, _, _, _ = _make_driver(MotorConfig(ramp_step_percent=5, ramp_step_delay_s=0.02))
+    driver._clockwise = True
+    driver.set_speed(40)
+    with patch.object(time, "monotonic", return_value=1000.0):
+        driver.set_direction_safe(False, target_speed=30)
+        driver.set_speed(50)
+
+    assert not driver.is_ramping
+    assert driver.speed == 50
+    assert driver._clockwise is True
+
+
+def test_stop_cancels_ramp() -> None:
+    driver, _, _, _ = _make_driver()
+    driver._clockwise = True
+    driver.set_speed(40)
+    with patch.object(time, "monotonic", return_value=1000.0):
+        driver.set_direction_safe(False, target_speed=30)
+        driver.stop()
+    assert not driver.is_ramping
+    assert driver.speed == 0
+
+
+def test_set_direction_safe_same_direction_applies_target_speed() -> None:
+    driver, _, _, _ = _make_driver()
+    driver._clockwise = True
+    driver.set_speed(20)
+    driver.set_direction_safe(True, target_speed=60)
+    assert not driver.is_ramping
+    assert driver.speed == 60
+    assert driver._clockwise is True
+
+
+def test_update_only_advances_after_delay() -> None:
+    driver, _, _, _ = _make_driver(MotorConfig(ramp_step_percent=10, ramp_step_delay_s=0.05))
+    driver._clockwise = True
+    driver.set_speed(50)
+    with patch.object(time, "monotonic", side_effect=[1000.0, 1000.01, 1000.02]):
+        driver.set_direction_safe(False)
+        driver.update()
+    assert driver.speed == 40
+    with patch.object(time, "monotonic", return_value=1000.03):
+        driver.update()
+    assert driver.speed == 40

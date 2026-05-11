@@ -88,6 +88,7 @@ class Robot:
         while self._running:
             next_tick = time.monotonic() + MAIN_LOOP_INTERVAL_S
             self._race.update()
+            self._motion.tick()
             sleep_time = next_tick - time.monotonic()
             if sleep_time > 0:
                 time.sleep(sleep_time)
