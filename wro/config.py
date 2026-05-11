@@ -66,7 +66,7 @@ class PidConfig:
     speed_epsilon: float = 7.0
     error_timeout_s: float = 0.6
     stuck_timeout_s: float = 0.5
-    derivative_alpha: float = 1.0
+    derivative_alpha: float = 0.2
 
 
 @dataclass
@@ -79,6 +79,7 @@ class UltrasonicConfig:
     max_distance_cm: float = 200.0
     close_distance_cm: float = 25.0
     ema_alpha: float = 0.35
+    max_consecutive_failures: int = 5
 
 
 @dataclass
@@ -99,8 +100,8 @@ class RaceConfig:
 class VisionConfig:
     red_lower_1: np.ndarray = field(default_factory=lambda: np.array([140, 180, 100]))
     red_upper_1: np.ndarray = field(default_factory=lambda: np.array([165, 255, 255]))
-    red_lower_2: np.ndarray = field(default_factory=lambda: np.array([0, 0, 1]))
-    red_upper_2: np.ndarray = field(default_factory=lambda: np.array([0, 0, 0]))
+    red_lower_2: np.ndarray = field(default_factory=lambda: np.array([0, 180, 100]))
+    red_upper_2: np.ndarray = field(default_factory=lambda: np.array([10, 255, 255]))
     green_lower: np.ndarray = field(default_factory=lambda: np.array([45, 80, 60]))
     green_upper: np.ndarray = field(default_factory=lambda: np.array([85, 255, 255]))
     min_pixel_count: int = 10_000

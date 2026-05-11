@@ -109,3 +109,35 @@ def test_derivative_output() -> None:
         output = pid.compute(0.0, 100.0)
     assert output < 0
     assert pid.last_derivative != 0.0
+
+
+def test_derivative_alpha_default_filters_raw_step() -> None:
+    config = PidConfig(kp=0.0, kd=1.0, max_output=1_000_000.0)
+    pid = PIDController(config)
+    with patch.object(time, "monotonic", side_effect=[FIXED_TIME, FIXED_TIME + 0.1, FIXED_TIME + 0.2]):
+        pid.compute(0.0, 0.0)
+        pid.compute(0.0, 0.0)
+        output = pid.compute(0.0, 1.0)
+    assert abs(output - (-2.0)) < 1e-6
+
+
+def test_integral_does_not_grow_when_saturated_in_same_direction() -> None:
+    config = PidConfig(kp=10.0, ki=1.0, max_output=10.0, max_integral=10_000.0)
+    pid = PIDController(config)
+    times = [FIXED_TIME + i * 0.1 for i in range(5)]
+    with patch.object(time, "monotonic", side_effect=times):
+        pid.compute(100.0, 0.0)
+        for _ in range(3):
+            pid.compute(100.0, 0.0)
+    assert pid._integral == 0.0
+
+
+def test_integral_grows_in_linear_region() -> None:
+    config = PidConfig(kp=1.0, ki=1.0, max_output=100.0)
+    pid = PIDController(config)
+    times = [FIXED_TIME + i * 0.1 for i in range(4)]
+    with patch.object(time, "monotonic", side_effect=times):
+        pid.compute(10.0, 0.0)
+        pid.compute(10.0, 0.0)
+        pid.compute(10.0, 0.0)
+    assert pid._integral > 0.0
