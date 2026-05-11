@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import heapq
 import math
 from dataclasses import dataclass, field
 
@@ -103,29 +104,33 @@ class PathPlanner:
         if start == target:
             return [self._waypoints[start].position]
 
+        target_pos = self._waypoints[target].position
         pool: list[_SearchNode] = []
-        open_list: list[int] = []
         closed_set: set[int] = set()
+        open_in_pool: dict[int, int] = {}
+        heap: list[tuple[int, int, int]] = []
+        counter = 0
 
-        pool.append(
-            _SearchNode(
-                g=0,
-                h=self._compute_h(self._waypoints[start].position, self._waypoints[target].position),
-                waypoint_idx=start,
-                parent_idx=NO_PARENT,
-            )
-        )
-        open_list.append(0)
+        start_h = self._compute_h(self._waypoints[start].position, target_pos)
+        pool.append(_SearchNode(g=0, h=start_h, waypoint_idx=start, parent_idx=NO_PARENT))
+        open_in_pool[start] = 0
+        heapq.heappush(heap, (start_h, counter, 0))
+        counter += 1
 
-        while open_list:
-            best_open = min(range(len(open_list)), key=lambda i: pool[open_list[i]].score)
-            current_search_idx = open_list.pop(best_open)
+        while heap:
+            _, _, current_search_idx = heapq.heappop(heap)
             current_wp = pool[current_search_idx].waypoint_idx
+
+            if current_wp in closed_set:
+                continue
+            if open_in_pool.get(current_wp) != current_search_idx:
+                continue
 
             if current_wp == target:
                 return self._reconstruct(pool, current_search_idx)
 
             closed_set.add(current_wp)
+            open_in_pool.pop(current_wp, None)
 
             for edge in self._waypoints[current_wp].edges:
                 neighbor = edge.target
@@ -133,23 +138,23 @@ class PathPlanner:
                     continue
 
                 tentative_g = pool[current_search_idx].g + edge.weight
+                existing_idx = open_in_pool.get(neighbor)
+                if existing_idx is not None and tentative_g >= pool[existing_idx].g:
+                    continue
 
-                existing = self._find_in_open(pool, open_list, neighbor)
-                if existing is not None:
-                    if tentative_g < pool[existing].g:
-                        pool[existing].g = tentative_g
-                        pool[existing].parent_idx = current_search_idx
-                else:
-                    new_idx = len(pool)
-                    pool.append(
-                        _SearchNode(
-                            g=tentative_g,
-                            h=self._compute_h(self._waypoints[neighbor].position, self._waypoints[target].position),
-                            waypoint_idx=neighbor,
-                            parent_idx=current_search_idx,
-                        )
+                neighbor_h = self._compute_h(self._waypoints[neighbor].position, target_pos)
+                new_idx = len(pool)
+                pool.append(
+                    _SearchNode(
+                        g=tentative_g,
+                        h=neighbor_h,
+                        waypoint_idx=neighbor,
+                        parent_idx=current_search_idx,
                     )
-                    open_list.append(new_idx)
+                )
+                open_in_pool[neighbor] = new_idx
+                heapq.heappush(heap, (tentative_g + neighbor_h, counter, new_idx))
+                counter += 1
 
         return None
 
@@ -171,13 +176,6 @@ class PathPlanner:
         dx = a.x - b.x
         dy = a.y - b.y
         return int(math.sqrt(dx * dx + dy * dy) + 0.5)
-
-    @staticmethod
-    def _find_in_open(pool: list[_SearchNode], open_list: list[int], wp_idx: int) -> int | None:
-        for idx in open_list:
-            if pool[idx].waypoint_idx == wp_idx:
-                return idx
-        return None
 
     def _reconstruct(self, pool: list[_SearchNode], target_idx: int) -> list[GridPosition]:
         path: list[GridPosition] = []

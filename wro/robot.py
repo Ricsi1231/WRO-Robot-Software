@@ -44,6 +44,7 @@ class Robot:
     ) -> None:
         self._pins = pins or PinConfig()
         self._running = False
+        self._cleaned_up = False
 
         _mc = motor_config or MotorConfig()
         _sc = steering_config or SteeringConfig()
@@ -85,24 +86,27 @@ class Robot:
 
     def run(self) -> None:
         self._running = True
-        while self._running:
-            next_tick = time.monotonic() + MAIN_LOOP_INTERVAL_S
-            self._race.update()
-            self._motion.tick()
-            sleep_time = next_tick - time.monotonic()
-            if sleep_time > 0:
-                time.sleep(sleep_time)
+        try:
+            while self._running:
+                next_tick = time.monotonic() + MAIN_LOOP_INTERVAL_S
+                self._race.update()
+                self._motion.tick()
+                sleep_time = next_tick - time.monotonic()
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+        finally:
+            self._cleanup()
 
     def on_start_signal(self) -> None:
         self._race.on_start_signal()
 
     def shutdown(self, _signum: int = 0, _frame: Any = None) -> None:
         self._running = False
-        self._cleanup()
-        if _signum != 0:
-            raise SystemExit(0)
 
     def _cleanup(self) -> None:
+        if self._cleaned_up:
+            return
+        self._cleaned_up = True
         with contextlib.suppress(Exception):
             self._camera.stop()
         with contextlib.suppress(Exception):

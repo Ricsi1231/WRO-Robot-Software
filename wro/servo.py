@@ -13,6 +13,21 @@ class ServoConfig:
     max_angle: float = 180.0
     center_angle: float = 90.0
 
+    def __post_init__(self) -> None:
+        if self.min_pulse_ms <= 0 or self.max_pulse_ms <= 0:
+            raise ValueError(f"pulse widths must be > 0, got min={self.min_pulse_ms}, max={self.max_pulse_ms}")
+        if self.min_pulse_ms >= self.max_pulse_ms:
+            raise ValueError(
+                f"min_pulse_ms must be < max_pulse_ms, got min={self.min_pulse_ms}, max={self.max_pulse_ms}"
+            )
+        if self.min_angle >= self.max_angle:
+            raise ValueError(f"min_angle must be < max_angle, got min={self.min_angle}, max={self.max_angle}")
+        if not self.min_angle <= self.center_angle <= self.max_angle:
+            raise ValueError(
+                f"center_angle must lie in [min_angle, max_angle], got center={self.center_angle}, "
+                f"min={self.min_angle}, max={self.max_angle}"
+            )
+
 
 class ServoDriver:
     def __init__(self, config: ServoConfig) -> None:

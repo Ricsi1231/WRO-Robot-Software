@@ -69,6 +69,9 @@ class MotorDriver:
             self._in2.off()
 
     def brake(self) -> None:
+        # NOTE: Active brake mode wiring depends on the H-bridge driver IC.
+        # Verify against your driver datasheet (L298N / TB6612 / DRV8833 differ)
+        # before relying on this for emergency stops; some drivers need PWM high.
         self._cancel_ramp()
         self._speed = 0
         if self._pwm is not None:

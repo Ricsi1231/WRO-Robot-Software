@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import enum
 from typing import Any
 
@@ -29,10 +30,12 @@ class ReflectanceSensor:
 
     def stop(self) -> None:
         if self._orange_input is not None:
-            self._orange_input.close()
+            with contextlib.suppress(Exception):
+                self._orange_input.close()
             self._orange_input = None
         if self._green_input is not None:
-            self._green_input.close()
+            with contextlib.suppress(Exception):
+                self._green_input.close()
             self._green_input = None
 
     @property

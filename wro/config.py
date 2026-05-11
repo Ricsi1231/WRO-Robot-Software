@@ -37,6 +37,17 @@ class SteeringConfig:
     max_speed_percent: float = 100.0
     min_speed_percent: float = 30.0
 
+    def __post_init__(self) -> None:
+        if self.pwm_frequency <= 0:
+            raise ValueError(f"pwm_frequency must be > 0, got {self.pwm_frequency}")
+        if self.max_angle <= 0:
+            raise ValueError(f"max_angle must be > 0, got {self.max_angle}")
+        if not 0 <= self.min_speed_percent <= self.max_speed_percent <= 100:
+            raise ValueError(
+                "speed percents must satisfy 0 <= min_speed_percent <= max_speed_percent <= 100; "
+                f"got min={self.min_speed_percent}, max={self.max_speed_percent}"
+            )
+
 
 @dataclass
 class MotionConfig:
@@ -78,8 +89,16 @@ class ReflectanceConfig:
 class UltrasonicConfig:
     max_distance_cm: float = 200.0
     close_distance_cm: float = 25.0
+    close_clear_distance_cm: float = 35.0
     ema_alpha: float = 0.35
     max_consecutive_failures: int = 5
+
+    def __post_init__(self) -> None:
+        if self.close_clear_distance_cm < self.close_distance_cm:
+            raise ValueError(
+                "close_clear_distance_cm must be >= close_distance_cm "
+                f"(got clear={self.close_clear_distance_cm}, close={self.close_distance_cm})"
+            )
 
 
 @dataclass
@@ -95,6 +114,20 @@ class RaceConfig:
     corner_steer_duration_s: float = 0.6
     clockwise: bool = True
 
+    def __post_init__(self) -> None:
+        if self.total_laps <= 0:
+            raise ValueError(f"total_laps must be > 0, got {self.total_laps}")
+        if self.corners_per_lap <= 0:
+            raise ValueError(f"corners_per_lap must be > 0, got {self.corners_per_lap}")
+        if self.cruise_velocity <= 0 or self.corner_velocity <= 0:
+            raise ValueError(
+                f"velocities must be > 0, got cruise={self.cruise_velocity}, corner={self.corner_velocity}"
+            )
+        for name in ("corner_debounce_s", "pillar_steer_duration_s", "corner_steer_duration_s"):
+            value = getattr(self, name)
+            if value < 0:
+                raise ValueError(f"{name} must be >= 0, got {value}")
+
 
 @dataclass
 class VisionConfig:
@@ -105,6 +138,22 @@ class VisionConfig:
     green_lower: np.ndarray = field(default_factory=lambda: np.array([45, 80, 60]))
     green_upper: np.ndarray = field(default_factory=lambda: np.array([85, 255, 255]))
     min_pixel_count: int = 10_000
+
+    def __post_init__(self) -> None:
+        pairs = (
+            ("red_1", self.red_lower_1, self.red_upper_1),
+            ("red_2", self.red_lower_2, self.red_upper_2),
+            ("green", self.green_lower, self.green_upper),
+        )
+        for name, lower, upper in pairs:
+            if lower.shape != (3,) or upper.shape != (3,):
+                raise ValueError(f"{name} HSV bounds must be 3-element arrays")
+            if np.any(lower > upper):
+                raise ValueError(
+                    f"{name} HSV lower > upper per-channel: lower={lower.tolist()}, upper={upper.tolist()}"
+                )
+        if self.min_pixel_count < 0:
+            raise ValueError(f"min_pixel_count must be >= 0, got {self.min_pixel_count}")
 
 
 MAIN_LOOP_INTERVAL_S = 0.02

@@ -46,6 +46,8 @@ class PIDController:
         else:
             self._settled = False
 
+        # Derivative-on-measurement (not on error) avoids derivative kick when
+        # the setpoint changes; intentional, do not switch to derivative-on-error.
         raw_derivative = -(measured - self._prev_measured) / dt
         alpha = self._config.derivative_alpha
         self._last_derivative = alpha * raw_derivative + (1.0 - alpha) * self._last_derivative

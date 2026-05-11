@@ -15,6 +15,7 @@ class UltrasonicSensor:
         self._sensor: Any = None
         self._distance_cm: float | None = None
         self._consecutive_failures: int = 0
+        self._was_close: bool = False
 
     def start(self) -> None:
         if self._pins.ultrasonic_trigger is None or self._pins.ultrasonic_echo is None:
@@ -35,6 +36,7 @@ class UltrasonicSensor:
             self._sensor = None
         self._distance_cm = None
         self._consecutive_failures = 0
+        self._was_close = False
 
     @property
     def distance_cm(self) -> float | None:
@@ -67,7 +69,12 @@ class UltrasonicSensor:
     @property
     def is_close(self) -> bool:
         distance = self.distance_cm
-        return distance is not None and distance <= self._config.close_distance_cm
+        if distance is None:
+            self._was_close = False
+            return False
+        threshold = self._config.close_clear_distance_cm if self._was_close else self._config.close_distance_cm
+        self._was_close = distance <= threshold
+        return self._was_close
 
     def cleanup(self) -> None:
         self.stop()
