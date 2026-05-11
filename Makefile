@@ -1,4 +1,4 @@
-.PHONY: setup check format lint typecheck test deploy run deploy-run all
+.PHONY: setup check format lint typecheck test coverage deploy run deploy-run all
 
 setup:
 	./scripts/setup.sh
@@ -17,6 +17,9 @@ typecheck:
 
 test:
 	pytest
+
+coverage:
+	pytest --cov --cov-report=term-missing --cov-report=xml
 
 deploy:
 	./scripts/deploy.sh

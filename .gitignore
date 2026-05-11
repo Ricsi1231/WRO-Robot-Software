@@ -11,7 +11,9 @@ deploy.env
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
-*.jpg
-*.png
+/*.jpg
+/*.png
+coverage.xml
+.coverage
 calibrate.txt
 camera_diagnostic_*.txt
