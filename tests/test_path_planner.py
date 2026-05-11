@@ -122,3 +122,24 @@ def test_blocked_start() -> None:
     planner.add_edge(a, b)
     planner.block_node(a)
     assert planner.find_path(a, b) is None
+
+
+def test_large_grid_path_returns_shortest() -> None:
+    planner = PathPlanner()
+    side = 25
+    ids: dict[tuple[int, int], int] = {}
+    for x in range(side):
+        for y in range(side):
+            ids[(x, y)] = planner.add_node(GridPosition(x, y))
+    for x in range(side):
+        for y in range(side):
+            if x + 1 < side:
+                planner.add_edge(ids[(x, y)], ids[(x + 1, y)])
+            if y + 1 < side:
+                planner.add_edge(ids[(x, y)], ids[(x, y + 1)])
+
+    path = planner.find_path(ids[(0, 0)], ids[(side - 1, side - 1)])
+    assert path is not None
+    assert path[0] == GridPosition(0, 0)
+    assert path[-1] == GridPosition(side - 1, side - 1)
+    assert len(path) == 2 * side - 1

@@ -16,13 +16,13 @@ def test_detect_red() -> None:
     assert result.green_pixels == 0
 
 
-def test_normal_red_hue_not_detected_for_this_camera_calibration() -> None:
+def test_low_hue_red_is_detected() -> None:
     frame = np.zeros((100, 100, 3), dtype=np.uint8)
-    frame[:, :, 0] = 10
+    frame[:, :, 0] = 5
     frame[:, :, 1] = 200
     frame[:, :, 2] = 200
     result = detect_color(frame, CONFIG)
-    assert result.red_pixels == 0
+    assert result.red_pixels > 0
     assert result.green_pixels == 0
 
 
@@ -85,9 +85,9 @@ def test_measured_red_hue_not_detected_as_green() -> None:
     assert result.green_pixels == 0
 
 
-def test_frame_to_hsv_treats_camera_frame_as_bgr() -> None:
+def test_frame_to_hsv_treats_camera_frame_as_rgb() -> None:
     frame = np.zeros((1, 1, 3), dtype=np.uint8)
-    frame[0, 0, 2] = 255
+    frame[0, 0, 0] = 255
     hsv = frame_to_hsv(frame)
     assert hsv[0, 0, 0] == 0
     assert hsv[0, 0, 1] == 255

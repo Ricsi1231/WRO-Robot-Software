@@ -48,3 +48,75 @@ def test_stop_closes_sensor() -> None:
 
     assert fake_sensor.closed is True
     assert sensor.distance_cm is None
+
+
+class FailingDistanceSensor:
+    def __init__(self) -> None:
+        self.closed = False
+
+    @property
+    def distance(self) -> float:
+        raise OSError("simulated ultrasonic timeout")
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def test_distance_returns_last_known_below_failure_threshold() -> None:
+    sensor = UltrasonicSensor(UltrasonicConfig(max_consecutive_failures=3), PinConfig())
+    sensor._sensor = FakeDistanceSensor(0.2)
+    assert sensor.distance_cm == 20.0
+
+    sensor._sensor = FailingDistanceSensor()
+    assert sensor.distance_cm == 20.0
+    assert sensor.distance_cm == 20.0
+
+
+def test_distance_returns_none_after_max_consecutive_failures() -> None:
+    sensor = UltrasonicSensor(UltrasonicConfig(max_consecutive_failures=2), PinConfig())
+    sensor._sensor = FakeDistanceSensor(0.2)
+    assert sensor.distance_cm == 20.0
+
+    sensor._sensor = FailingDistanceSensor()
+    assert sensor.distance_cm == 20.0
+    assert sensor.distance_cm is None
+    assert sensor.is_close is False
+
+
+def test_is_close_hysteresis_stays_close_until_clear_threshold() -> None:
+    config = UltrasonicConfig(
+        close_distance_cm=25.0,
+        close_clear_distance_cm=35.0,
+        ema_alpha=1.0,
+    )
+    sensor = UltrasonicSensor(config, PinConfig())
+    fake = FakeDistanceSensor(0.5)
+    sensor._sensor = fake
+
+    assert sensor.is_close is False
+
+    fake.distance = 0.20
+    assert sensor.is_close is True
+
+    fake.distance = 0.30
+    assert sensor.is_close is True
+
+    fake.distance = 0.40
+    assert sensor.is_close is False
+
+
+def test_consecutive_failure_counter_resets_on_success() -> None:
+    config = UltrasonicConfig(max_consecutive_failures=3)
+    sensor = UltrasonicSensor(config, PinConfig())
+    fake = FakeDistanceSensor(0.2)
+    sensor._sensor = fake
+    assert sensor.distance_cm == 20.0
+
+    sensor._sensor = FailingDistanceSensor()
+    _ = sensor.distance_cm
+    _ = sensor.distance_cm
+    assert sensor._consecutive_failures == 2
+
+    sensor._sensor = fake
+    _ = sensor.distance_cm
+    assert sensor._consecutive_failures == 0

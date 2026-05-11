@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from typing import Any
 
 from wro.config import EncoderConfig, PinConfig
+
+_logger = logging.getLogger(__name__)
 
 
 class Encoder:
@@ -38,6 +41,10 @@ class Encoder:
             self._cb_a = pi.callback(self._pins.encoder_a, pigpio.EITHER_EDGE, self._on_edge)
             self._cb_b = pi.callback(self._pins.encoder_b, pigpio.EITHER_EDGE, self._on_edge)
         except Exception:
+            _logger.warning(
+                "Encoder pigpio initialization failed; RPM will report 0",
+                exc_info=True,
+            )
             self._pi = None
 
         self._running = True
@@ -76,6 +83,10 @@ class Encoder:
     def rpm_raw(self) -> float:
         with self._lock:
             return self._rpm_raw
+
+    @property
+    def healthy(self) -> bool:
+        return self._pi is not None
 
     def cleanup(self) -> None:
         self.stop()

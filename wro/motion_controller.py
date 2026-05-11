@@ -32,14 +32,13 @@ class MotionController:
             return
 
         desired_cw = self._velocity_to_clockwise(clamped)
+        speed_percent = int(abs(clamped) * self._config.velocity_to_speed_scale)
 
         if self._would_reverse(clamped):
-            self._drive.set_direction_safe(desired_cw)
+            self._drive.set_direction_safe(desired_cw, speed_percent)
         else:
             self._drive.set_direction(desired_cw)
-
-        speed_percent = int(abs(clamped) * self._config.velocity_to_speed_scale)
-        self._drive.set_speed(speed_percent)
+            self._drive.set_speed(speed_percent)
         self._velocity = clamped
 
     def set_steering_angle(self, angle_deg: float) -> None:
@@ -85,6 +84,10 @@ class MotionController:
     @property
     def is_moving(self) -> bool:
         return self._drive.is_running
+
+    def tick(self) -> None:
+        self._drive.update()
+        self._steer.update()
 
     def cleanup(self) -> None:
         self._drive.cleanup()

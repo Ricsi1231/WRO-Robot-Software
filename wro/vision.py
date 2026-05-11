@@ -37,7 +37,9 @@ def detect_color(hsv_frame: np.ndarray, config: VisionConfig) -> DetectionResult
 
 
 def frame_to_hsv(frame: np.ndarray) -> np.ndarray:
-    return cast(np.ndarray, cv2.cvtColor(frame, cv2.COLOR_BGR2HSV))
+    # Camera is configured as RGB888 and calibrate.py uses COLOR_RGB2HSV;
+    # keep this in sync so HSV thresholds match between calibration and runtime.
+    return cast(np.ndarray, cv2.cvtColor(frame, cv2.COLOR_RGB2HSV))
 
 
 class Camera:

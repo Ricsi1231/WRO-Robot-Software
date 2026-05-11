@@ -17,10 +17,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "ruff",
-    "mypy",
-    "pytest",
-    "pre-commit",
+    "ruff>=0.15,<0.16",
+    "mypy>=2.0,<3.0",
+    "pytest>=9.0,<10.0",
+    "pytest-cov>=7.0,<8.0",
+    "pre-commit>=4.0,<5.0",
 ]
 
 [tool.ruff]
@@ -28,7 +29,7 @@ target-version = "py311"
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
+select = ["E", "F", "I", "UP", "B", "SIM", "W", "RUF"]
 
 [tool.mypy]
 python_version = "3.11"
@@ -43,3 +44,22 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+addopts = "--strict-markers"
+markers = [
+    "hardware: requires real Raspberry Pi hardware (skipped by default in CI)",
+    "slow: tests that take more than a couple of seconds",
+]
+norecursedirs = ["component_tests", ".venv", "build", "dist"]
+
+[tool.coverage.run]
+branch = true
+source = ["wro"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+show_missing = true
+skip_covered = false

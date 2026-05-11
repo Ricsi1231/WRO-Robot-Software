@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from wro.config import PinConfig, UltrasonicConfig
+
+_logger = logging.getLogger(__name__)
 
 
 class UltrasonicSensor:
@@ -11,6 +14,8 @@ class UltrasonicSensor:
         self._pins = pins
         self._sensor: Any = None
         self._distance_cm: float | None = None
+        self._consecutive_failures: int = 0
+        self._was_close: bool = False
 
     def start(self) -> None:
         if self._pins.ultrasonic_trigger is None or self._pins.ultrasonic_echo is None:
@@ -23,12 +28,15 @@ class UltrasonicSensor:
             trigger=self._pins.ultrasonic_trigger,
             max_distance=self._config.max_distance_cm / 100.0,
         )
+        self._consecutive_failures = 0
 
     def stop(self) -> None:
         if self._sensor is not None:
             self._sensor.close()
             self._sensor = None
         self._distance_cm = None
+        self._consecutive_failures = 0
+        self._was_close = False
 
     @property
     def distance_cm(self) -> float | None:
@@ -38,8 +46,18 @@ class UltrasonicSensor:
         try:
             measured_cm = float(self._sensor.distance) * 100.0
         except Exception:
+            self._consecutive_failures += 1
+            _logger.warning(
+                "Ultrasonic read failed (consecutive=%d)",
+                self._consecutive_failures,
+                exc_info=True,
+            )
+            if self._consecutive_failures >= self._config.max_consecutive_failures:
+                self._distance_cm = None
+                return None
             return self._distance_cm
 
+        self._consecutive_failures = 0
         if self._distance_cm is None:
             self._distance_cm = measured_cm
         else:
@@ -51,7 +69,12 @@ class UltrasonicSensor:
     @property
     def is_close(self) -> bool:
         distance = self.distance_cm
-        return distance is not None and distance <= self._config.close_distance_cm
+        if distance is None:
+            self._was_close = False
+            return False
+        threshold = self._config.close_clear_distance_cm if self._was_close else self._config.close_distance_cm
+        self._was_close = distance <= threshold
+        return self._was_close
 
     def cleanup(self) -> None:
         self.stop()

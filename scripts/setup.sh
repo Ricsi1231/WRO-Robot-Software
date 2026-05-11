@@ -16,7 +16,7 @@ echo "Activating virtual environment..."
 source "$VENV_DIR/bin/activate"
 
 echo "Installing dependencies..."
-pip install -e .[dev] --quiet
+pip install -e .[dev]
 
 echo "Installing pre-commit hooks..."
 pre-commit install

@@ -108,7 +108,7 @@ def test_close_obstacle_without_color_does_not_start_pillar_avoidance() -> None:
 
 def test_stopping_after_three_laps() -> None:
     config = RaceConfig(total_laps=3, corners_per_lap=4, corner_debounce_s=0.0, corner_steer_duration_s=0.0)
-    rc, motion, _, reflectance, _ = _make_controller(config)
+    rc, _motion, _, reflectance, _ = _make_controller(config)
     rc.on_start_signal()
     rc.update()
 
