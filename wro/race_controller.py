@@ -3,8 +3,9 @@ from __future__ import annotations
 import enum
 import time
 
-from wro.config import RaceConfig
+from wro.config import IrLineConfig, RaceConfig
 from wro.encoder import Encoder
+from wro.ir_line_sensor import IrLineSensor
 from wro.motion_controller import MotionController
 from wro.pid import PIDController
 from wro.reflectance_sensor import ReflectanceClass, ReflectanceSensor
@@ -29,6 +30,8 @@ class RaceController:
         pid: PIDController,
         camera: Camera,
         ultrasonic: UltrasonicSensor,
+        ir_line: IrLineSensor,
+        ir_config: IrLineConfig,
     ) -> None:
         self._config = config
         self._motion = motion
@@ -37,6 +40,8 @@ class RaceController:
         self._pid = pid
         self._camera = camera
         self._ultrasonic = ultrasonic
+        self._ir_line = ir_line
+        self._ir_config = ir_config
 
         self._state = RaceState.IDLE
         self._start_signal_received = False
@@ -52,6 +57,9 @@ class RaceController:
         self._avoidance_start_time: float = 0.0
         self._current_avoidance_angle: float = 0.0
 
+        self._in_ir_turn = False
+        self._ir_turn_start_time: float = 0.0
+
     def start(self) -> None:
         self._state = RaceState.IDLE
         self._start_signal_received = False
@@ -59,6 +67,8 @@ class RaceController:
         self._lap_count = 0
         self._in_corner_maneuver = False
         self._in_avoidance_maneuver = False
+        self._in_ir_turn = False
+        self._ir_line.reset_count()
 
     def on_start_signal(self) -> None:
         self._start_signal_received = True
@@ -118,13 +128,31 @@ class RaceController:
             self._motion.set_steering_angle(self._current_avoidance_angle)
             self._motion.set_velocity(self._config.corner_velocity)
 
+        if self._in_ir_turn:
+            if now - self._ir_turn_start_time >= self._ir_config.turn_duration_s:
+                self._in_ir_turn = False
+                if not self._in_avoidance_maneuver and not self._in_corner_maneuver:
+                    self._motion.set_steering_angle(0.0)
+                    self._motion.set_velocity(self._config.cruise_velocity)
+        elif (
+            not self._in_avoidance_maneuver
+            and not self._in_corner_maneuver
+            and self._ir_line.detection_count >= self._ir_config.detections_per_turn
+        ):
+            self._ir_line.reset_count()
+            ir_angle = self._ir_config.turn_steering_angle if self._clockwise else -self._ir_config.turn_steering_angle
+            self._in_ir_turn = True
+            self._ir_turn_start_time = now
+            self._motion.set_steering_angle(ir_angle)
+            self._motion.set_velocity(self._ir_config.turn_velocity)
+
         if self._in_corner_maneuver:
             if now - self._corner_start_time >= self._config.corner_steer_duration_s:
                 self._in_corner_maneuver = False
-                if not self._in_avoidance_maneuver:
+                if not self._in_avoidance_maneuver and not self._in_ir_turn:
                     self._motion.set_steering_angle(0.0)
                     self._motion.set_velocity(self._config.cruise_velocity)
-        elif not self._in_avoidance_maneuver:
+        elif not self._in_avoidance_maneuver and not self._in_ir_turn:
             detected = self._reflectance.detected_class
             if detected == ReflectanceClass.ORANGE and (now - self._last_corner_time) >= self._config.corner_debounce_s:
                 self._corner_count += 1

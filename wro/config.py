@@ -19,6 +19,7 @@ class PinConfig:
     reflectance_green: int | None = None
     ultrasonic_trigger: int | None = None
     ultrasonic_echo: int | None = None
+    ir_line: int | None = None
     button: int = 23
 
 
@@ -83,6 +84,28 @@ class PidConfig:
 @dataclass
 class ReflectanceConfig:
     debounce_s: float = 0.05
+
+
+@dataclass
+class IrLineConfig:
+    debounce_s: float = 0.05
+    detection_debounce_s: float = 0.30
+    detections_per_turn: int = 2
+    turn_steering_angle: float = 25.0
+    turn_duration_s: float = 0.6
+    turn_velocity: float = 0.3
+
+    def __post_init__(self) -> None:
+        if self.detections_per_turn <= 0:
+            raise ValueError(f"detections_per_turn must be > 0, got {self.detections_per_turn}")
+        if self.turn_velocity <= 0:
+            raise ValueError(f"turn_velocity must be > 0, got {self.turn_velocity}")
+        if self.turn_steering_angle <= 0:
+            raise ValueError(f"turn_steering_angle must be > 0, got {self.turn_steering_angle}")
+        for name in ("debounce_s", "detection_debounce_s", "turn_duration_s"):
+            value = getattr(self, name)
+            if value < 0:
+                raise ValueError(f"{name} must be >= 0, got {value}")
 
 
 @dataclass

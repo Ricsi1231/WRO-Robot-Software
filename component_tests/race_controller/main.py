@@ -4,12 +4,13 @@ from __future__ import annotations
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from wro.config import RaceConfig
+from wro.config import IrLineConfig, RaceConfig
 from wro.race_controller import RaceController
 from wro.reflectance_sensor import ReflectanceClass
 from wro.vision import DetectionResult
@@ -58,6 +59,14 @@ class FakeUltrasonic:
         self.is_close = False
 
 
+class FakeIrLine:
+    def __init__(self) -> None:
+        self.detection_count = 0
+
+    def reset_count(self) -> None:
+        self.detection_count = 0
+
+
 def main() -> None:
     config = RaceConfig(
         total_laps=1,
@@ -66,13 +75,15 @@ def main() -> None:
         corner_steer_duration_s=0.01,
         pillar_steer_duration_s=0.01,
     )
-    motion = FakeMotion()
-    encoder = FakeEncoder()
-    reflectance = FakeReflectance()
-    pid = FakePid()
-    camera = FakeCamera()
-    ultrasonic = FakeUltrasonic()
-    controller = RaceController(config, motion, encoder, reflectance, pid, camera, ultrasonic)  # type: ignore[arg-type]
+    motion: Any = FakeMotion()
+    encoder: Any = FakeEncoder()
+    reflectance: Any = FakeReflectance()
+    pid: Any = FakePid()
+    camera: Any = FakeCamera()
+    ultrasonic: Any = FakeUltrasonic()
+    ir_line: Any = FakeIrLine()
+    ir_config = IrLineConfig()
+    controller = RaceController(config, motion, encoder, reflectance, pid, camera, ultrasonic, ir_line, ir_config)
 
     controller.start()
     print(f"state={controller.state.name}")

@@ -8,6 +8,7 @@ from typing import Any
 from wro.config import (
     MAIN_LOOP_INTERVAL_S,
     EncoderConfig,
+    IrLineConfig,
     MotionConfig,
     MotorConfig,
     PidConfig,
@@ -19,6 +20,7 @@ from wro.config import (
     VisionConfig,
 )
 from wro.encoder import Encoder
+from wro.ir_line_sensor import IrLineSensor
 from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 from wro.pid import PIDController
@@ -41,6 +43,7 @@ class Robot:
         ultrasonic_config: UltrasonicConfig | None = None,
         race_config: RaceConfig | None = None,
         vision_config: VisionConfig | None = None,
+        ir_line_config: IrLineConfig | None = None,
     ) -> None:
         self._pins = pins or PinConfig()
         self._running = False
@@ -61,6 +64,8 @@ class Robot:
         self._reflectance = ReflectanceSensor(reflectance_config or ReflectanceConfig(), self._pins)
         self._ultrasonic = UltrasonicSensor(ultrasonic_config or UltrasonicConfig(), self._pins)
         self._camera = Camera(vision_config or VisionConfig())
+        _ir_config = ir_line_config or IrLineConfig()
+        self._ir_line = IrLineSensor(_ir_config, self._pins)
         self._race = RaceController(
             race_config or RaceConfig(),
             self._motion,
@@ -69,6 +74,8 @@ class Robot:
             self._pid,
             self._camera,
             self._ultrasonic,
+            self._ir_line,
+            _ir_config,
         )
 
     def init(self) -> None:
@@ -77,6 +84,7 @@ class Robot:
             self._encoder.start()
             self._reflectance.start()
             self._ultrasonic.start()
+            self._ir_line.start()
             self._camera.start()
             self._race.start()
         except Exception:
@@ -111,6 +119,8 @@ class Robot:
             self._camera.stop()
         with contextlib.suppress(Exception):
             self._reflectance.stop()
+        with contextlib.suppress(Exception):
+            self._ir_line.stop()
         with contextlib.suppress(Exception):
             self._ultrasonic.stop()
         with contextlib.suppress(Exception):

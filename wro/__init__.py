@@ -1,5 +1,6 @@
 from wro.config import (
     EncoderConfig,
+    IrLineConfig,
     MotionConfig,
     MotorConfig,
     PidConfig,
@@ -11,6 +12,7 @@ from wro.config import (
     VisionConfig,
 )
 from wro.encoder import Encoder
+from wro.ir_line_sensor import IrLineSensor
 from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 from wro.path_planner import GridPosition, HeuristicType, PathPlanner
@@ -28,6 +30,8 @@ __all__ = [
     "EncoderConfig",
     "GridPosition",
     "HeuristicType",
+    "IrLineConfig",
+    "IrLineSensor",
     "MotionConfig",
     "MotionController",
     "MotorConfig",

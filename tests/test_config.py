@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from wro.config import RaceConfig, SteeringConfig, UltrasonicConfig, VisionConfig
+from wro.config import IrLineConfig, RaceConfig, SteeringConfig, UltrasonicConfig, VisionConfig
 from wro.servo import ServoConfig
 
 
@@ -65,3 +65,30 @@ def test_servo_config_rejects_inverted_pulse() -> None:
 def test_servo_config_rejects_center_outside_range() -> None:
     with pytest.raises(ValueError, match="center_angle"):
         ServoConfig(min_angle=0.0, max_angle=180.0, center_angle=200.0)
+
+
+def test_ir_line_config_defaults_construct() -> None:
+    cfg = IrLineConfig()
+    assert cfg.detections_per_turn == 2
+    assert cfg.turn_velocity > 0
+    assert cfg.turn_steering_angle > 0
+
+
+def test_ir_line_config_rejects_zero_detections_per_turn() -> None:
+    with pytest.raises(ValueError, match="detections_per_turn"):
+        IrLineConfig(detections_per_turn=0)
+
+
+def test_ir_line_config_rejects_negative_velocity() -> None:
+    with pytest.raises(ValueError, match="turn_velocity"):
+        IrLineConfig(turn_velocity=-0.1)
+
+
+def test_ir_line_config_rejects_zero_steering_angle() -> None:
+    with pytest.raises(ValueError, match="turn_steering_angle"):
+        IrLineConfig(turn_steering_angle=0.0)
+
+
+def test_ir_line_config_rejects_negative_durations() -> None:
+    with pytest.raises(ValueError, match="detection_debounce_s"):
+        IrLineConfig(detection_debounce_s=-0.1)
