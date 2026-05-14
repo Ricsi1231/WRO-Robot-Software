@@ -13,8 +13,8 @@ TEST_PINS = PinConfig(
     encoder_b=None,
     reflectance_orange=None,
     reflectance_green=None,
-    ultrasonic_trigger=None,
-    ultrasonic_echo=None,
+    ultrasonic_trigger=24,
+    ultrasonic_echo=23,
     button=23,
 )
 
