@@ -15,7 +15,7 @@ TEST_PINS = PinConfig(
     reflectance_green=None,
     ultrasonic_trigger=24,
     ultrasonic_echo=23,
-    ir_line=None,
+    ir_line=17,
     button=23,
 )
 
