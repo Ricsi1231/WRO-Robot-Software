@@ -13,6 +13,7 @@ RIGHT_DURATION_S: float = 0.3
 LEFT_DURATION_S: float = 0.3
 STEERING_ACTIVATION_S: float = 3.0
 STEERING_OFF_S: float = 1.0
+END_RECENTER_S: float = 0.1
 CYCLES: int = 5
 DRIVE_VELOCITY: float = 0.85
 STEERING_MAX_SPEED_PERCENT: float = 100.0
@@ -99,6 +100,11 @@ def main() -> None:
 
             print(f"Cycle {cycle}/{CYCLES}: left phase {LEFT_DURATION_S:.2f}s")
             _run_phase(motion, max_left_angle, LEFT_DURATION_S)
+
+        if _running and END_RECENTER_S > 0:
+            print(f"Re-centering steering {END_RECENTER_S:.2f}s")
+            motion.set_motion(0.0, max_right_angle)
+            _sleep_interruptible(END_RECENTER_S)
 
         print("Sequence complete.")
     finally:
