@@ -11,6 +11,7 @@ from wro.motor_driver import MotorDriver
 
 RIGHT_DURATION_S: float = 3.0
 LEFT_DURATION_S: float = 1.0
+STEERING_ACTIVATION_S: float = 1.0
 CYCLES: int = 10
 DRIVE_VELOCITY: float = 1.0
 STEERING_MAX_SPEED_PERCENT: float = 75.0
@@ -38,6 +39,24 @@ def _require_pin(name: str, value: int | None) -> int:
     if value is None:
         raise SystemExit(f"Pin '{name}' is not set in component_tests/hardware_config.py")
     return value
+
+
+def _run_phase(motion: MotionController, steering_angle: float, total_duration_s: float) -> None:
+    """Steer to the target angle for STEERING_ACTIVATION_S, then release the
+    steering motor while the drive keeps running for the remainder of the phase."""
+    activation = min(STEERING_ACTIVATION_S, total_duration_s)
+    motion.set_motion(DRIVE_VELOCITY, steering_angle)
+    _sleep_interruptible(activation)
+
+    if not _running:
+        return
+
+    coast = total_duration_s - activation
+    if coast <= 0:
+        return
+
+    motion.set_motion(DRIVE_VELOCITY, 0.0)
+    _sleep_interruptible(coast)
 
 
 def main() -> None:
@@ -73,16 +92,14 @@ def main() -> None:
             if not _running:
                 break
 
-            print(f"Cycle {cycle}/{CYCLES}: right arc {RIGHT_DURATION_S:.2f}s")
-            motion.set_motion(DRIVE_VELOCITY, max_right_angle)
-            _sleep_interruptible(RIGHT_DURATION_S)
+            print(f"Cycle {cycle}/{CYCLES}: right phase {RIGHT_DURATION_S:.2f}s")
+            _run_phase(motion, max_right_angle, RIGHT_DURATION_S)
 
             if not _running:
                 break
 
-            print(f"Cycle {cycle}/{CYCLES}: left arc {LEFT_DURATION_S:.2f}s")
-            motion.set_motion(DRIVE_VELOCITY, max_left_angle)
-            _sleep_interruptible(LEFT_DURATION_S)
+            print(f"Cycle {cycle}/{CYCLES}: left phase {LEFT_DURATION_S:.2f}s")
+            _run_phase(motion, max_left_angle, LEFT_DURATION_S)
 
         print("Sequence complete.")
     finally:
