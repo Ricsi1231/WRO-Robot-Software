@@ -12,7 +12,8 @@ from wro.motor_driver import MotorDriver
 RIGHT_DURATION_S: float = 3.0
 LEFT_DURATION_S: float = 1.0
 CYCLES: int = 10
-TURN_VELOCITY: float = 0.75
+DRIVE_VELOCITY: float = 1.0
+STEERING_MAX_SPEED_PERCENT: float = 75.0
 COUNTDOWN_S: int = 3
 SLEEP_TICK_S: float = 0.05
 
@@ -47,7 +48,7 @@ def main() -> None:
     steer_in1 = _require_pin("steer_in1", TEST_PINS.steer_in1)
     steer_in2 = _require_pin("steer_in2", TEST_PINS.steer_in2)
 
-    steering_config = SteeringConfig()
+    steering_config = SteeringConfig(max_speed_percent=STEERING_MAX_SPEED_PERCENT)
     motion_config = MotionConfig()
     drive = MotorDriver(MotorConfig(), drive_en, drive_in1, drive_in2)
     steer = MotorDriver(MotorConfig(pwm_frequency=steering_config.pwm_frequency), steer_en, steer_in1, steer_in2)
@@ -73,14 +74,14 @@ def main() -> None:
                 break
 
             print(f"Cycle {cycle}/{CYCLES}: right arc {RIGHT_DURATION_S:.2f}s")
-            motion.set_motion(TURN_VELOCITY, max_right_angle)
+            motion.set_motion(DRIVE_VELOCITY, max_right_angle)
             _sleep_interruptible(RIGHT_DURATION_S)
 
             if not _running:
                 break
 
             print(f"Cycle {cycle}/{CYCLES}: left arc {LEFT_DURATION_S:.2f}s")
-            motion.set_motion(TURN_VELOCITY, max_left_angle)
+            motion.set_motion(DRIVE_VELOCITY, max_left_angle)
             _sleep_interruptible(LEFT_DURATION_S)
 
         print("Sequence complete.")
