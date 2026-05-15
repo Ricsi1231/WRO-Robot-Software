@@ -10,7 +10,7 @@ from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 
 RIGHT_DURATION_S: float = 3.0
-LEFT_DURATION_S: float = 3.0
+LEFT_DURATION_S: float = 1.0
 CYCLES: int = 10
 TURN_VELOCITY: float = 1.0
 COUNTDOWN_S: int = 3
