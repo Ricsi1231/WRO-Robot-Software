@@ -12,7 +12,7 @@ from wro.motor_driver import MotorDriver
 RIGHT_DURATION_S: float = 3.0
 LEFT_DURATION_S: float = 1.0
 CYCLES: int = 10
-TURN_VELOCITY: float = 0.5
+TURN_VELOCITY: float = 0.75
 COUNTDOWN_S: int = 3
 SLEEP_TICK_S: float = 0.05
 
