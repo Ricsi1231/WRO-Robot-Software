@@ -9,8 +9,9 @@ from wro.config import MotionConfig, MotorConfig, SteeringConfig
 from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 
-FORWARD_DURATIONS_S: tuple[float, float, float, float] = (10.0, 10.0, 10.0, 10.0)
+FORWARD_DURATIONS_S: tuple[float, float, float, float] = (5.0, 5.0, 5.0, 5.0)
 LEFT_DURATION_S: float = 0.6
+CENTER_DURATION_S: float = 0.6
 FORWARD_VELOCITY: float = 1.0
 LEFT_VELOCITY: float = 0.5
 COUNTDOWN_S: int = 3
@@ -82,6 +83,13 @@ def main() -> None:
             print(f"  Left turn {LEFT_DURATION_S:.2f}s")
             motion.set_motion(LEFT_VELOCITY, max_left_angle)
             _sleep_interruptible(LEFT_DURATION_S)
+
+            if not _running:
+                break
+
+            print(f"  Re-center {CENTER_DURATION_S:.2f}s")
+            motion.set_motion(0.0, -max_left_angle)
+            _sleep_interruptible(CENTER_DURATION_S)
 
         print("Sequence complete.")
     finally:
