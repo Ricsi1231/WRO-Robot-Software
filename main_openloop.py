@@ -9,7 +9,7 @@ from wro.config import MotionConfig, MotorConfig, SteeringConfig
 from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 
-FORWARD_DURATIONS_S: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0)
+FORWARD_DURATIONS_S: tuple[float, float, float, float] = (10.0, 10.0, 10.0, 10.0)
 LEFT_DURATION_S: float = 0.6
 FORWARD_VELOCITY: float = 1.0
 LEFT_VELOCITY: float = 0.5
