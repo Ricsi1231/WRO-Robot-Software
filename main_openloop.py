@@ -12,6 +12,7 @@ from wro.motor_driver import MotorDriver
 RIGHT_DURATION_S: float = 3.0
 LEFT_DURATION_S: float = 1.0
 STEERING_ACTIVATION_S: float = 3.0
+STEERING_OFF_S: float = 1.0
 CYCLES: int = 5
 DRIVE_VELOCITY: float = 0.75
 STEERING_MAX_SPEED_PERCENT: float = 100.0
@@ -43,7 +44,8 @@ def _require_pin(name: str, value: int | None) -> int:
 
 def _run_phase(motion: MotionController, steering_angle: float, total_duration_s: float) -> None:
     """Steer to the target angle for STEERING_ACTIVATION_S, then release the
-    steering motor while the drive keeps running for the remainder of the phase."""
+    steering motor and drive forward straight for any remainder of the phase
+    plus STEERING_OFF_S of post-turn cooldown."""
     activation = min(STEERING_ACTIVATION_S, total_duration_s)
     motion.set_motion(DRIVE_VELOCITY, steering_angle)
     _sleep_interruptible(activation)
@@ -51,12 +53,9 @@ def _run_phase(motion: MotionController, steering_angle: float, total_duration_s
     if not _running:
         return
 
-    coast = total_duration_s - activation
-    if coast <= 0:
-        return
-
+    off_duration = max(0.0, total_duration_s - activation) + STEERING_OFF_S
     motion.set_motion(DRIVE_VELOCITY, 0.0)
-    _sleep_interruptible(coast)
+    _sleep_interruptible(off_duration)
 
 
 def main() -> None:
