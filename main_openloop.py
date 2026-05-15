@@ -9,7 +9,7 @@ from wro.config import MotionConfig, MotorConfig, SteeringConfig
 from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 
-RIGHT_DURATION_S: float = 3.0
+RIGHT_DURATION_S: float = 1.0
 LEFT_DURATION_S: float = 1.0
 STEERING_ACTIVATION_S: float = 3.0
 STEERING_OFF_S: float = 1.0
