@@ -11,7 +11,7 @@ from wro.motor_driver import MotorDriver
 
 FORWARD_DURATIONS_S: tuple[float, float, float, float] = (8.0, 8.0, 8.0, 8.0)
 LEFT_DURATION_S: float = 0.6
-CENTER_DURATION_S: float = 0.2
+CENTER_DURATION_S: float = 0.5
 FORWARD_VELOCITY: float = 1.0
 LEFT_VELOCITY: float = 0.5
 COUNTDOWN_S: int = 3
