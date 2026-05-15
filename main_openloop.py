@@ -9,11 +9,9 @@ from wro.config import MotionConfig, MotorConfig, SteeringConfig
 from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 
-FORWARD_DURATIONS_S: tuple[float, float, float, float] = (8.0, 8.0, 8.0, 8.0)
-LEFT_DURATION_S: float = 0.6
-CENTER_DURATION_S: float = 0.8
-FORWARD_VELOCITY: float = 1.0
-LEFT_VELOCITY: float = 0.5
+LEFT_DURATION_S: float = 3.0
+RIGHT_DURATION_S: float = 3.0
+TURN_VELOCITY: float = 0.5
 COUNTDOWN_S: int = 3
 SLEEP_TICK_S: float = 0.05
 
@@ -58,7 +56,7 @@ def main() -> None:
     signal.signal(signal.SIGTERM, _request_stop)
 
     max_left_angle = -motion_config.max_steering_angle
-    total_segments = len(FORWARD_DURATIONS_S)
+    max_right_angle = motion_config.max_steering_angle
 
     try:
         motion.init()
@@ -69,27 +67,15 @@ def main() -> None:
             print(f"Starting in {i}...")
             time.sleep(1.0)
 
-        for idx, forward_duration in enumerate(FORWARD_DURATIONS_S):
-            if not _running:
-                break
-
-            print(f"Segment {idx + 1}/{total_segments}: forward {forward_duration:.2f}s")
-            motion.set_motion(FORWARD_VELOCITY, 0.0)
-            _sleep_interruptible(forward_duration)
-
-            if not _running or idx == total_segments - 1:
-                continue
-
-            print(f"  Left turn {LEFT_DURATION_S:.2f}s")
-            motion.set_motion(LEFT_VELOCITY, max_left_angle)
+        if _running:
+            print(f"Left arc {LEFT_DURATION_S:.2f}s")
+            motion.set_motion(TURN_VELOCITY, max_left_angle)
             _sleep_interruptible(LEFT_DURATION_S)
 
-            if not _running:
-                break
-
-            print(f"  Re-center {CENTER_DURATION_S:.2f}s")
-            motion.set_motion(0.0, -max_left_angle)
-            _sleep_interruptible(CENTER_DURATION_S)
+        if _running:
+            print(f"Right arc {RIGHT_DURATION_S:.2f}s")
+            motion.set_motion(TURN_VELOCITY, max_right_angle)
+            _sleep_interruptible(RIGHT_DURATION_S)
 
         print("Sequence complete.")
     finally:
