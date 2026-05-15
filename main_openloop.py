@@ -11,7 +11,7 @@ from wro.motor_driver import MotorDriver
 
 RIGHT_DURATION_S: float = 3.0
 LEFT_DURATION_S: float = 1.0
-STEERING_ACTIVATION_S: float = 1.0
+STEERING_ACTIVATION_S: float = 3.0
 CYCLES: int = 10
 DRIVE_VELOCITY: float = 0.75
 STEERING_MAX_SPEED_PERCENT: float = 75.0
