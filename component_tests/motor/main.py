@@ -28,14 +28,14 @@ def main() -> None:
             "drive_in2": TEST_PINS.drive_in2,
         },
     )
-    confirm_hardware_test("Drive motor will move forward at full speed.", REQUIRE_CONFIRMATION)
+    confirm_hardware_test("Drive motor will move reverse at full speed.", REQUIRE_CONFIRMATION)
 
     motor = MotorDriver(MotorConfig(), TEST_PINS.drive_en, TEST_PINS.drive_in1, TEST_PINS.drive_in2)
     try:
         motor.init()
-        motor.set_direction(True)
+        motor.set_direction(False)
         motor.set_speed(TEST_MOTOR_SPEED_PERCENT)
-        sleep_with_status(TEST_MOVE_DURATION_S, "Drive motor forward.")
+        sleep_with_status(TEST_MOVE_DURATION_S, "Drive motor reverse.")
         motor.stop()
     finally:
         cleanup_safely(motor.cleanup)
