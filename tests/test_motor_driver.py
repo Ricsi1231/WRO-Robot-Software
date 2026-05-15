@@ -51,6 +51,19 @@ def test_direction_backward() -> None:
     mock_in2.on.assert_called()
 
 
+def test_set_direction_re_applies_pins_after_stop() -> None:
+    driver, _, mock_in1, mock_in2 = _make_driver()
+    driver.set_direction(True)
+    driver.stop()
+    mock_in1.reset_mock()
+    mock_in2.reset_mock()
+
+    driver.set_direction(True)
+
+    mock_in1.on.assert_called()
+    mock_in2.off.assert_called()
+
+
 def test_stop_coast() -> None:
     driver, mock_pwm, mock_in1, mock_in2 = _make_driver()
     driver.set_speed(50)

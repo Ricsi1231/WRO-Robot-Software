@@ -42,8 +42,6 @@ class MotorDriver:
 
     def set_direction(self, clockwise: bool) -> None:
         self._cancel_ramp()
-        if self._clockwise == clockwise:
-            return
         self._clockwise = clockwise
         self._apply_direction()
 
