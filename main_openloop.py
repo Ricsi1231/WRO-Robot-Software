@@ -9,8 +9,9 @@ from wro.config import MotionConfig, MotorConfig, SteeringConfig
 from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 
-LEFT_DURATION_S: float = 3.0
 RIGHT_DURATION_S: float = 3.0
+LEFT_DURATION_S: float = 3.0
+CYCLES: int = 10
 TURN_VELOCITY: float = 0.5
 COUNTDOWN_S: int = 3
 SLEEP_TICK_S: float = 0.05
@@ -67,15 +68,20 @@ def main() -> None:
             print(f"Starting in {i}...")
             time.sleep(1.0)
 
-        if _running:
-            print(f"Left arc {LEFT_DURATION_S:.2f}s")
-            motion.set_motion(TURN_VELOCITY, max_left_angle)
-            _sleep_interruptible(LEFT_DURATION_S)
+        for cycle in range(1, CYCLES + 1):
+            if not _running:
+                break
 
-        if _running:
-            print(f"Right arc {RIGHT_DURATION_S:.2f}s")
+            print(f"Cycle {cycle}/{CYCLES}: right arc {RIGHT_DURATION_S:.2f}s")
             motion.set_motion(TURN_VELOCITY, max_right_angle)
             _sleep_interruptible(RIGHT_DURATION_S)
+
+            if not _running:
+                break
+
+            print(f"Cycle {cycle}/{CYCLES}: left arc {LEFT_DURATION_S:.2f}s")
+            motion.set_motion(TURN_VELOCITY, max_left_angle)
+            _sleep_interruptible(LEFT_DURATION_S)
 
         print("Sequence complete.")
     finally:
