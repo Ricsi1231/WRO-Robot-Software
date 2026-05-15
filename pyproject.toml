@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["main", "calibrate"]
+py-modules = ["main", "main_openloop", "calibrate"]
 packages = ["wro"]
 
 [project]
