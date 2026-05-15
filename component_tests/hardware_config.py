@@ -3,9 +3,9 @@ from __future__ import annotations
 from wro.config import PinConfig
 
 TEST_PINS = PinConfig(
-    drive_en=None,
-    drive_in1=None,
-    drive_in2=None,
+    drive_en=13,
+    drive_in1=5,
+    drive_in2=6,
     steer_en=None,
     steer_in1=None,
     steer_in2=None,
