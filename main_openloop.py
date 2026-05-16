@@ -9,9 +9,8 @@ from wro.config import MotionConfig, MotorConfig, SteeringConfig
 from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 
-FORWARD_DURATION_S: float = 1.5
+FORWARD_DURATIONS_S: tuple[float, ...] = (1.0, 1.5, 1.5, 1.5)
 LEFT_DURATION_S: float = 2.0
-SIDES: int = 4
 STEERING_ACTIVATION_S: float = 3.0
 STEERING_OFF_S: float = 1.0
 END_RECENTER_S: float = 0.1
@@ -88,18 +87,19 @@ def main() -> None:
             print(f"Starting in {i}...")
             time.sleep(1.0)
 
-        for side in range(1, SIDES + 1):
+        total_sides = len(FORWARD_DURATIONS_S)
+        for idx, forward_duration in enumerate(FORWARD_DURATIONS_S, start=1):
             if not _running:
                 break
 
-            print(f"Side {side}/{SIDES}: forward {FORWARD_DURATION_S:.2f}s")
+            print(f"Side {idx}/{total_sides}: forward {forward_duration:.2f}s")
             motion.set_motion(DRIVE_VELOCITY, 0.0)
-            _sleep_interruptible(FORWARD_DURATION_S)
+            _sleep_interruptible(forward_duration)
 
             if not _running:
                 break
 
-            print(f"Side {side}/{SIDES}: left turn {LEFT_DURATION_S:.2f}s")
+            print(f"Side {idx}/{total_sides}: left turn {LEFT_DURATION_S:.2f}s")
             _run_phase(motion, max_left_angle, LEFT_DURATION_S)
 
         if _running and END_RECENTER_S > 0:
