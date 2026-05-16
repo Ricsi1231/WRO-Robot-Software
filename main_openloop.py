@@ -10,7 +10,7 @@ from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 
 FORWARD_DURATIONS_S: tuple[float, ...] = (1.0, 1.5, 1.5, 1.5)
-LEFT_DURATION_S: float = 2.0
+LEFT_DURATION_S: float = 1.0
 STEERING_ACTIVATION_S: float = 3.0
 STEERING_OFF_S: float = 1.0
 END_RECENTER_S: float = 2.0
