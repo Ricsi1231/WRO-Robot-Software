@@ -9,12 +9,12 @@ from wro.config import MotionConfig, MotorConfig, SteeringConfig
 from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 
-RIGHT_DURATION_S: float = 1
-LEFT_DURATION_S: float = 1
+FORWARD_DURATION_S: float = 2.0
+LEFT_DURATION_S: float = 1.0
+SIDES: int = 4
 STEERING_ACTIVATION_S: float = 3.0
 STEERING_OFF_S: float = 1.0
 END_RECENTER_S: float = 0.1
-CYCLES: int = 1
 DRIVE_VELOCITY: float = 0.85
 STEERING_MAX_SPEED_PERCENT: float = 100.0
 COUNTDOWN_S: int = 3
@@ -88,17 +88,18 @@ def main() -> None:
             print(f"Starting in {i}...")
             time.sleep(1.0)
 
-        for cycle in range(1, CYCLES + 1):
+        for side in range(1, SIDES + 1):
             if not _running:
                 break
 
-            print(f"Cycle {cycle}/{CYCLES}: right phase {RIGHT_DURATION_S:.2f}s")
-            _run_phase(motion, max_right_angle, RIGHT_DURATION_S)
+            print(f"Side {side}/{SIDES}: forward {FORWARD_DURATION_S:.2f}s")
+            motion.set_motion(DRIVE_VELOCITY, 0.0)
+            _sleep_interruptible(FORWARD_DURATION_S)
 
             if not _running:
                 break
 
-            print(f"Cycle {cycle}/{CYCLES}: left phase {LEFT_DURATION_S:.2f}s")
+            print(f"Side {side}/{SIDES}: left turn {LEFT_DURATION_S:.2f}s")
             _run_phase(motion, max_left_angle, LEFT_DURATION_S)
 
         if _running and END_RECENTER_S > 0:
