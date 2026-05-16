@@ -10,7 +10,7 @@ from wro.motion_controller import MotionController
 from wro.motor_driver import MotorDriver
 
 FORWARD_DURATION_S: float = 1.5
-LEFT_DURATION_S: float = 1.0
+LEFT_DURATION_S: float = 2.0
 SIDES: int = 4
 STEERING_ACTIVATION_S: float = 3.0
 STEERING_OFF_S: float = 1.0
